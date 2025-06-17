@@ -22,6 +22,7 @@ MonoBehaviour:
     level: 1
     baseValue: 0.2
     weight: 95
+    customValues: []
   - id: 1
     itemName: Food1
     iconName: F1
@@ -31,6 +32,7 @@ MonoBehaviour:
     level: 1
     baseValue: 1
     weight: 5
+    customValues: []
   - id: 2
     itemName: Food2
     iconName: F2
@@ -40,6 +42,7 @@ MonoBehaviour:
     level: 1
     baseValue: 1
     weight: 5
+    customValues: []
   - id: 3
     itemName: Food3
     iconName: F3
@@ -49,3 +52,18 @@ MonoBehaviour:
     level: 1
     baseValue: 1
     weight: 5
+    customValues: []
+  - id: 4
+    itemName: SpeedUP
+    iconName: speedUp
+    tickValue: 0.8
+    maxValue: 5
+    cost: 12
+    level: 1
+    baseValue: 1
+    weight: 5
+    customValues:
+    - id: coolDown
+      customValue: 3
+    - id: multiplier
+      customValue: 2

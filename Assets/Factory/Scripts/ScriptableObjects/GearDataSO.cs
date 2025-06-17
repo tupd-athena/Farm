@@ -32,6 +32,8 @@ namespace Factory
         public float baseValue;
         public float weight;
 
+        public List<GearDataCustomValue> customValues;
+
         public void Copy(GearData other)
         {
             id = other.id;
@@ -43,6 +45,13 @@ namespace Factory
             weight = other.weight;
             baseValue = other.baseValue;
             level = other.level;
+            customValues = other.customValues;
         }
+    }
+    [System.Serializable]
+    public class GearDataCustomValue
+    {
+        public string id;
+        public float customValue;
     }
 }

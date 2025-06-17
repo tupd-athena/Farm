@@ -92,7 +92,7 @@ namespace Factory
             _currentLevelConfig = GetCurrentLevelConfig();
             currentDay = 0;
             _gold = 0;
-
+            CustomValueManager.Instance.ClearCustomValueInGame();
             InitGears(_currentLevelConfig.gridSize);
             InitBoxes(GetCurrentDayConfig().fishConfigs);
             UpdateGold(_gold + _currentLevelConfig.initialLevelCurrency);
@@ -329,9 +329,6 @@ namespace Factory
                     gearController.SetGear(6);
                     gearController.OnRotate += (float Amplifier) =>
                     {
-                        Debug.Log(
-                            $"Rotate {gearController.itemData.itemName}, {Amplifier},{isStop}, {CheckActiveItemCount()}, {gearController.isHead}"
-                        );
                         if (
                             !gearController.isHead
                             && gearController.itemData != null
@@ -631,5 +628,7 @@ namespace Factory
         {
             return _gearDataSO.gearDataList.Find(gear => gear.id == id);
         }
+
+        
     }
 }

@@ -16,28 +16,28 @@ namespace Factory
             IDragHandler
     {
         [SerializeField]
-        private Image _gearIcon;
+        protected Image _gearIcon;
 
         [SerializeField]
-        private Image _gearItemIcon;
+        protected Image _gearItemIcon;
 
         [SerializeField]
-        private Image _gearItemIconBG;
+        protected Image _gearItemIconBG;
 
         [SerializeField]
-        private RectTransform _gui;
+        protected RectTransform _gui;
 
         [SerializeField]
-        private TMP_Text _levelText;
+        protected TMP_Text _levelText;
 
         [SerializeField]
-        private Sprite _gear1;
+        protected Sprite _gear1;
 
         [SerializeField]
-        private Sprite _gear6ForItemIcon;
+        protected Sprite _gear6ForItemIcon;
 
         [SerializeField]
-        private Sprite _gear6ForTextIcon;
+        protected Sprite _gear6ForTextIcon;
 
         public Vector2 gridCoordinate;
 
@@ -50,21 +50,29 @@ namespace Factory
         public bool isActive = false;
         public bool isHead = false;
         public bool isReverse = false;
+        public bool isStop = false;
+        public bool isNotAddTickValue = false;
 
         public bool isInShop = false;
 
         public System.Action<float> OnRotate;
         public System.Action<GearData> OnDropShop;
 
-        private GearController _tempGear;
-        private Canvas _canvas;
-        private RectTransform _rectTransform;
+        protected GearController _tempGear;
+        protected Canvas _canvas;
+        protected RectTransform _rectTransform;
 
         public GearData gearData;
         public ItemData itemData;
         public float currentTotalTickValue = 0;
 
-        void Awake()
+        public System.Action OnStopRotate;
+        public System.Action OnStartRotate;
+        public System.Action OnFillComplete;
+
+        public System.Action OnDestroy;
+
+        protected void Awake()
         {
             _rectTransform = GetComponent<RectTransform>();
             _canvas = GetComponentInParent<Canvas>();
@@ -97,6 +105,7 @@ namespace Factory
             _gui.gameObject.SetActive(false);
             gearData = null;
             itemData = null;
+            OnDestroy?.Invoke();
         }
 
         public void SetGearData(GearData data)
@@ -134,6 +143,17 @@ namespace Factory
                     _gearItemIcon.sprite = null;
                     SetGear(gearData.id);
                 }
+                AddSpecialGear(data);
+            }
+        }
+
+        public void AddSpecialGear(GearData data)
+        {
+            switch (data.itemName)
+            {
+                case "SpeedUP":
+                    gameObject.AddComponent<SpeedUpGear>();
+                    break;
             }
         }
 
@@ -169,8 +189,12 @@ namespace Factory
             );
         }
 
-        public void Rotate()
+        public void Rotate() //Only for head gear
         {
+            if (isStop)
+            {
+                return;
+            }
             if (isHead)
             {
                 _gearIcon.transform.DOKill();
@@ -181,8 +205,15 @@ namespace Factory
             {
                 ease = Ease.InSine;
             }
+            float multiplier = CustomValueManager.Instance.GetCustomValueInGame(
+                CustomValueManager.MULTIPLIER_HEAD_GEAR
+            );
+            multiplier = multiplier == 0 ? 1 : multiplier;
             _gearIcon
-                .transform.DORotate(new Vector3(0, 0, angle * ((direction + 1) % 4)), 0.5f)
+                .transform.DORotate(
+                    new Vector3(0, 0, angle * ((direction + 1) % 4)),
+                    0.5f / multiplier
+                )
                 .SetEase(ease)
                 .OnComplete(() =>
                 {
@@ -191,8 +222,12 @@ namespace Factory
                 });
         }
 
-        public void Rotate(float angle, float Amplifier)
+        public virtual void Rotate(float angle, float Amplifier)
         {
+            if (isStop)
+            {
+                return;
+            }
             _gearIcon.transform.DOComplete();
             _gearIcon
                 .transform.DORotate(new Vector3(0, 0, angle + startAngle), 0.1f)
@@ -202,10 +237,10 @@ namespace Factory
                 });
         }
 
-        public void UpdateRotationProgress(float Amplifier)
+        public virtual void UpdateRotationProgress(float Amplifier)
         {
             _gearIcon.transform.localEulerAngles = new Vector3(0, 0, startAngle);
-            if (gearData == null || gearData.id == 0 || isHead)
+            if (gearData == null || gearData.id == 0 || isHead || isStop)
             {
                 return;
             }
@@ -215,17 +250,35 @@ namespace Factory
             float AmplifierToCost =
                 Amplifier >= gearData.maxValue ? Amplifier - gearData.maxValue : 0;
             int bonus = (int)(AmplifierToTick / gearData.maxValue);
-            currentTotalTickValue += gearData.tickValue + (bonus >= 1 ? 0 : AmplifierToTick);
+            var tickValue = gearData.tickValue + (bonus >= 1 ? 0 : AmplifierToTick);
+            if (isNotAddTickValue)
+            {
+                tickValue = 0;
+                AmplifierToCost = 0;
+            }
+            currentTotalTickValue +=
+                (
+                    tickValue
+                    + CustomValueManager.Instance.GetCustomValueInGame(
+                        CustomValueManager.ADD_TICK_VALUE
+                    )
+                )
+                * (
+                    CustomValueManager.Instance.GetCustomValueInGame(
+                        CustomValueManager.MULTIPLIER_TICK_VALUE
+                    ) + 1
+                );
             if (currentTotalTickValue >= gearData.maxValue)
             {
                 int rotationCount = (int)(currentTotalTickValue / gearData.maxValue) + bonus;
                 currentTotalTickValue = currentTotalTickValue % gearData.maxValue;
+                OnFillComplete?.Invoke();
                 StartCoroutine(InvokeRotateWithDelay(rotationCount, AmplifierToCost));
             }
             FillItemIcon(currentTotalTickValue / gearData.maxValue);
         }
 
-        private IEnumerator InvokeRotateWithDelay(int rotationCount, float Amplifier)
+        public IEnumerator InvokeRotateWithDelay(int rotationCount, float Amplifier)
         {
             for (int i = 0; i < rotationCount; i++)
             {
@@ -353,7 +406,7 @@ namespace Factory
             GameManager.Instance.CheckFirstOpenShop();
         }
 
-        private bool CanMergeAmplifierGears(GearController otherGear)
+        protected bool CanMergeAmplifierGears(GearController otherGear)
         {
             if (
                 GameManager.Instance.GameState.CurrentState == GameStateType.Shop
@@ -372,14 +425,14 @@ namespace Factory
                 && otherGear.gearData.level == gearData.level;
         }
 
-        private void MergeAmplifierGears(GearController otherGear)
+        protected void MergeAmplifierGears(GearController otherGear)
         {
             gearData.level++;
             _levelText.text = gearData.level.ToString();
             otherGear.Hide();
         }
 
-        private void SwapGears(GearController otherGear)
+        protected void SwapGears(GearController otherGear)
         {
             GearData tempGearData = new GearData();
             tempGearData.Copy(gearData);
@@ -393,7 +446,7 @@ namespace Factory
             otherGear.Show();
         }
 
-        private void TransferGear(GearController otherGear)
+        protected void TransferGear(GearController otherGear)
         {
             SetGearData(otherGear.gearData);
             SetItemData(otherGear.gearData);
