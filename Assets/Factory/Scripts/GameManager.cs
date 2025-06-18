@@ -39,8 +39,8 @@ namespace Factory
 
         [SerializeField]
         private GridLayoutGroup _gearItemContainer;
+        public GameObject TempContainerUI => homeUI.BoardTempContainer.gameObject;
         public GameObject TempContainer;
-
 
         [SerializeField]
         private LevelConfigSO _levelConfigSO;
@@ -326,7 +326,7 @@ namespace Factory
                     }
                     gearController.gridCoordinate = new Vector2(i, j);
                     gearController.Hide();
-                    gearController.SetGear(6);
+                    gearController.SetGear(new List<GearType> { GearType.Text });
                     gearController.OnRotate += (float Amplifier) =>
                     {
                         if (
@@ -373,7 +373,7 @@ namespace Factory
             _gearControllers[gearindex].Rotate();
             _gearControllers[gearindex].Show();
             _gearControllers[gearindex].isHead = true;
-            _gearControllers[gearindex].SetGear(1);
+            _gearControllers[gearindex].SetGear(new List<GearType> { GearType.HeadGear });
         }
 
         public void CalculateGearNeighbors()
@@ -452,42 +452,35 @@ namespace Factory
         {
             var totalWeight = 0f;
 
-            foreach (var gearData in _gearDataSO.gearDataList.FindAll(g => g.id != 0))
-            {
-                totalWeight += gearData.weight;
-            }
-
-            homeUI.ShopItems[1].gear.SetGearData(_gearDataSO.gearDataList[0]);
-            homeUI.ShopItems[1].gear.SetItemData(_gearDataSO.gearDataList[0]);
-            homeUI.ShopItems[1].gear.isInShop = true;
-            homeUI.ShopItems[1].gear.Show();
-            homeUI.ShopItems[1].gear.FillItemIcon(1);
-            homeUI.UpdateCostText(homeUI.ShopItems[1], (int)_gearDataSO.gearDataList[0].cost);
-            homeUI.ShopItems[1].purchased = false;
-            homeUI.ShopItems[1].gear.SetGear(_gearDataSO.gearDataList[0].id);
-            homeUI.ShopItems[1].gear.OnDropShop = null;
-            homeUI.ShopItems[1].gear.OnDropShop += (gearData) =>
-            {
-                if (_gold >= (int)gearData.cost)
-                {
-                    _gold -= (int)gearData.cost;
-                    UpdateGold(_gold);
-                    homeUI.ShopItems[1].purchased = true;
-                }
-                CheckGoldAllGearsInShop();
-            };
-
+            var gearTypes = new List<GearType> { GearType.Food, GearType.Text, GearType.Image };
+            var index = 0;
             foreach (var shopItem in homeUI.ShopItems)
             {
-                if (shopItem.gear == homeUI.ShopItems[1].gear)
+                totalWeight = 0;
+                var currentGearType = gearTypes[index];
+                foreach (
+                    var gearData in _gearDataSO.gearDataList.FindAll(g =>
+                        g.gearTypes.Contains(currentGearType)
+                    )
+                )
                 {
-                    continue;
+                    totalWeight += gearData.weight;
                 }
                 System.Random random = new System.Random();
                 float randomValue = random.Next(0, (int)totalWeight);
                 float currentWeight = 0f;
-
-                foreach (var gearData in _gearDataSO.gearDataList.FindAll(g => g.id != 0))
+                Debug.Log(
+                    "Current Gear Type: "
+                        + currentGearType
+                        + _gearDataSO
+                            .gearDataList.FindAll(g => g.gearTypes.Contains(currentGearType))
+                            .Count
+                );
+                foreach (
+                    var gearData in _gearDataSO.gearDataList.FindAll(g =>
+                        g.gearTypes.Contains(currentGearType)
+                    )
+                )
                 {
                     currentWeight += gearData.weight;
                     if (randomValue <= currentWeight)
@@ -498,7 +491,7 @@ namespace Factory
                         homeUI.UpdateCostText(shopItem, (int)gearData.cost);
                         shopItem.gear.Show();
                         shopItem.gear.FillItemIcon(1);
-                        shopItem.gear.SetGear(gearData.id);
+                        shopItem.gear.SetGear(gearData.gearTypes);
                         shopItem.gear.OnDropShop = null;
                         shopItem.gear.OnDropShop += (gearData) =>
                         {
@@ -514,6 +507,7 @@ namespace Factory
                         break;
                     }
                 }
+                index++;
             }
             CheckGoldAllGearsInShop();
         }
@@ -548,6 +542,18 @@ namespace Factory
                 }
             }
             homeUI.SetLockRerollButton(CheckGold(5));
+        }
+
+        public void SetAllGearFillEmpty()
+        {
+            foreach (var gear in _gearControllers)
+            {
+                if (gear.gearData == null || !gear.gearData.gearTypes.Contains(GearType.Image))
+                {
+                    continue;
+                }
+                gear.FillItemIcon(0);
+            }
         }
 
         public bool CheckItemInShop(GearController gear)
@@ -628,7 +634,5 @@ namespace Factory
         {
             return _gearDataSO.gearDataList.Find(gear => gear.id == id);
         }
-
-        
     }
 }

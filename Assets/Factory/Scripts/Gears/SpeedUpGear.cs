@@ -43,7 +43,11 @@ public class SpeedUpGear : MonoBehaviour
                     _coolDown = x;
                     gearController.FillItemIcon(1 - _coolDown);
                 }
-            )
+            ).OnStart(() =>
+            {
+                gearController.FillItemIcon(1);
+                gearController.isNotAddTickValue = true;
+            })
             .OnComplete(() =>
             {
                 gearController.FillItemIcon(0);

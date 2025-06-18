@@ -19,6 +19,16 @@ namespace Factory
             }
         }
     }
+
+    public enum GearType
+    {
+        Text,
+        Image,
+        Food,
+        HeadGear,
+        Modifier,
+        Special,
+    }
     [System.Serializable]
     public class GearData
     {
@@ -31,6 +41,7 @@ namespace Factory
         public int level = 1;
         public float baseValue;
         public float weight;
+        public List<GearType> gearTypes = new List<GearType>();
 
         public List<GearDataCustomValue> customValues;
 
@@ -46,6 +57,7 @@ namespace Factory
             baseValue = other.baseValue;
             level = other.level;
             customValues = other.customValues;
+            gearTypes = other.gearTypes;
         }
     }
     [System.Serializable]

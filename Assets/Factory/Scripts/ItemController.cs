@@ -16,7 +16,7 @@ namespace Factory
 
         public ItemData itemData;
 
-        public bool isInLiquid = false;
+        public bool dropCompleted = false;
 
         public Tween moveTween;
 
@@ -25,6 +25,9 @@ namespace Factory
         public bool isInWater = false;
 
         private List<Task> _asyncTasks = new List<Task>();
+
+        public bool canCollect = false;
+        public System.Action OnDropToSurface;
 
         private void KillAllTweens()
         {
@@ -44,10 +47,7 @@ namespace Factory
             //remove all async await
             foreach (var task in _asyncTasks)
             {
-                if (!task.IsCompleted)
-                {
-                    task.Dispose();
-                }
+                if (!task.IsCompleted && task.Status != TaskStatus.RanToCompletion) { }
             }
             _asyncTasks.Clear();
         }
@@ -57,7 +57,7 @@ namespace Factory
             // Reset all states
             isCollected = false;
             mergeable = false;
-            isInLiquid = false;
+            dropCompleted = false;
             isInWater = false;
 
             // Kill all active tweens
@@ -74,19 +74,12 @@ namespace Factory
             _itemIcon.color = new Color(1, 1, 1, 1);
             _itemIcon.gameObject.SetActive(true);
             SetGravityInAir();
+            OnDropToSurface = null;
         }
 
         void OnDisable()
         {
             KillAllTweens();
-        }
-
-        void Update()
-        {
-            if (transform.position.y < -10)
-            {
-                GameManager.Instance.CollectItem(this);
-            }
         }
 
         private void SetMergeable()
@@ -96,12 +89,12 @@ namespace Factory
 
         private void SetGravityInAir()
         {
-            isInLiquid = false;
+            dropCompleted = false;
             GetComponent<Collider2D>().isTrigger = false;
             GetComponent<Rigidbody2D>().gravityScale = 1f;
         }
 
-        private async Task SetGravityInLiquid()
+        protected virtual async Task SetGravityInLiquid()
         {
             var delayTask = Task.Delay(2000);
             _asyncTasks.Add(delayTask);
@@ -120,7 +113,9 @@ namespace Factory
                 .OnComplete(() =>
                 {
                     isInWater = true;
-                }).AsyncWaitForCompletion();
+                    canCollect = true;
+                })
+                .AsyncWaitForCompletion();
             _asyncTasks.Add(moveTask);
             await moveTask;
             if (itemData.dropType == DropType.Leaf)
@@ -141,7 +136,7 @@ namespace Factory
         {
             moveTween = null;
             transform
-                .DOLocalMoveY(-7.5f, 24f / itemData.dropSpeed)
+                .DOLocalMoveY(-7.8f, 24f / itemData.dropSpeed)
                 .OnComplete(async () =>
                 {
                     var delayTask = Task.Delay(1000);
@@ -159,7 +154,7 @@ namespace Factory
 
             // Create the zigzag sequence
             moveTween = transform
-                .DOLocalMoveY(-7.5f, 15f / itemData.dropSpeed)
+                .DOLocalMoveY(-7.8f, 15f / itemData.dropSpeed)
                 .OnComplete(async () =>
                 {
                     var delayTask = Task.Delay(1000);
@@ -220,6 +215,49 @@ namespace Factory
                 this.itemData.cost = cost;
             }
             UpdateItem();
+            AddSpecialComponent();
+        }
+
+        public void AddSpecialComponent()
+        {
+            switch (itemData.itemName)
+            {
+                case "HomingBait":
+                    if (GetComponent<HomingBait>() == null)
+                    {
+                        gameObject.AddComponent<HomingBait>();
+                    }
+                    GetComponent<HomingBait>().enabled = true;
+                    GetComponent<HomingBait>().itemController = this;
+                    OnDropToSurface = null;
+                    OnDropToSurface += () =>
+                    {
+                        GetComponent<HomingBait>().Active();
+                    };
+                    canCollect = false;
+                    break;
+                case "HeartBait":
+                    if (GetComponent<HeartBait>() == null)
+                    {
+                        gameObject.AddComponent<HeartBait>();
+                    }
+                    GetComponent<HeartBait>().enabled = true;
+                    GetComponent<HeartBait>().itemController = this;
+                    OnDropToSurface = null;
+                    OnDropToSurface += () =>
+                    {
+                        GetComponent<HeartBait>().Active();
+                    };
+                    canCollect = false;
+                    break;
+                default:
+                    OnDropToSurface = null;
+                    OnDropToSurface += () =>
+                    {
+                        SetGravityInLiquid();
+                    };
+                    break;
+            }
         }
 
         public void UpdateItem()
@@ -258,7 +296,7 @@ namespace Factory
 
         void FixedUpdate()
         {
-            if (!isInLiquid)
+            if (!dropCompleted)
             {
                 UsingRaycast();
             }
@@ -285,17 +323,16 @@ namespace Factory
             RaycastHit2D[] hits = Physics2D.RaycastAll(
                 transform.position,
                 Vector2.down,
-                itemData.size * 0.6f
+                itemData.size * 0.3f
             );
             foreach (RaycastHit2D hit in hits)
             {
                 if (hit.collider != null && hit.collider.gameObject != gameObject)
                 {
-                    if (hit.collider.CompareTag("Liquid") && !isInLiquid)
+                    if (hit.collider.CompareTag("Liquid") && !dropCompleted)
                     {
-                        isInLiquid = true;
-                        var gravityTask = SetGravityInLiquid();
-                        _asyncTasks.Add(gravityTask);
+                        dropCompleted = true;
+                        OnDropToSurface?.Invoke();
                         FreezeConstrain();
                     }
                     if (hit.collider.CompareTag("Item") && !isCollected && mergeable)
@@ -321,41 +358,6 @@ namespace Factory
                         return;
                     }
                 }
-            }
-        }
-
-        void OnCollisionEnter2D(Collision2D collision)
-        {
-            return;
-            if (transform.localScale.x >= 0.24 * 4)
-            {
-                return;
-            }
-            if (!mergeable || itemData == null)
-            {
-                return;
-            }
-            if (collision.gameObject.CompareTag("Item"))
-            {
-                var item = collision.gameObject.GetComponent<ItemController>();
-                var outputItemId = GetOutputItemId(item.itemData);
-                var outputItemData = GameManager.Instance.GetItemDataByItemID(outputItemId);
-                if (outputItemData == null)
-                {
-                    return;
-                }
-                var outputItemDataCopy = new ItemData();
-                outputItemDataCopy.Copy(outputItemData);
-                item.Dissolve();
-                outputItemDataCopy.cost =
-                    (item.itemData.cost + itemData.cost) * outputItemData.cost;
-                SetItemData(outputItemDataCopy);
-                transform.DOScale(transform.localScale * 1.5f, 0.1f).SetLoops(2, LoopType.Yoyo);
-            }
-            if (collision.gameObject.CompareTag("Liquid") && !isInLiquid)
-            {
-                isInLiquid = true;
-                Invoke(nameof(SetGravityInLiquid), 2f);
             }
         }
 

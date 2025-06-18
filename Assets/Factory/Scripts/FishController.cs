@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Coffee.UIExtensions;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -54,6 +55,7 @@ namespace Factory
         public float currentTotalTickValue = 0;
 
         public RectTransform _confuseVFX;
+        public Transform _immortalVFX;
 
         public Transform hpBar;
 
@@ -67,6 +69,8 @@ namespace Factory
 
         protected ItemController _currentTargetItem;
         public SpriteRenderer spriteRenderer => _spriteRenderer;
+
+        public bool tempImmortal = false;
 
         protected bool _lockTarget = false;
 
@@ -97,8 +101,14 @@ namespace Factory
         {
             _hpBarMask.sortingOrder = 100 + index;
             hpBar.GetComponent<SpriteRenderer>().sortingOrder = 100 + index + 1;
-            _spriteMask.backSortingOrder = 100 + index;
             _spriteMask.frontSortingOrder = 100 + index + 2;
+            _spriteMask.backSortingOrder = 100 + index;
+            Debug.Log(
+                "Front Sorting Order: "
+                    + _spriteMask.frontSortingOrder
+                    + " Back Sorting Order: "
+                    + _spriteMask.backSortingOrder
+            );
             SetLinesSortingOrder(100 + index + 2);
             this.fishConfig = fishConfig;
             currentTotalTickValue = 0;
@@ -133,6 +143,10 @@ namespace Factory
             {
                 line.GetComponent<SpriteRenderer>().sortingOrder = index;
             }
+            if (_immortalVFX != null)
+            {
+                _immortalVFX.GetComponent<ParticleSystemRenderer>().sortingOrder = index;
+            }
         }
 
         public void UpdateHpBar()
@@ -161,8 +175,11 @@ namespace Factory
 
         public virtual void DecreaseHPByTime()
         {
-            currentTotalTickValue -=
-                fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100;
+            if (!tempImmortal)
+            {
+                currentTotalTickValue -=
+                    fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100;
+            }
 
             UpdateHpBar();
             if (currentTotalTickValue < 0)
@@ -197,7 +214,7 @@ namespace Factory
             if (
                 _currentTargetItem == null
                 || _currentTargetItem.isCollected
-                || !_currentTargetItem.isInLiquid
+                || !_currentTargetItem.dropCompleted
                 || !_currentTargetItem.gameObject.activeSelf
             )
             {
@@ -212,13 +229,13 @@ namespace Factory
                 if (hit.collider != null && hit.collider.CompareTag("Item"))
                 {
                     ItemController item = hit.collider.GetComponent<ItemController>();
-                    if (!item.isInWater)
+                    if (!item.isInWater || !item.canCollect)
                     {
                         continue;
                     }
                     if (
                         item != null
-                        && item.isInLiquid
+                        && item.dropCompleted
                         && !item.isCollected
                         && item.gameObject.activeSelf
                     )
@@ -240,13 +257,7 @@ namespace Factory
                                     tweenParams.fishGrowScaleDuration
                                 )
                                 .SetLoops(2, LoopType.Yoyo);
-                            item.isCollected = true;
-                            GameManager.Instance.CollectItem(item);
-                            currentTotalTickValue += item.itemData.cost;
-                            AudioManager.Instance.PlaySound("Eat");
-                            UpdateHpBar();
-                            CheckFull();
-                            _lockTarget = false;
+                            Eat(item);
                         }
                         else
                         {
@@ -270,6 +281,55 @@ namespace Factory
                     }
                 }
             }
+        }
+
+        public void Eat(ItemController item)
+        {
+            item.isCollected = true;
+            GameManager.Instance.CollectItem(item);
+            if(state != FishState.Moving)
+            {
+                return;
+            }
+            currentTotalTickValue += item.itemData.cost;
+            AudioManager.Instance.PlaySound("Eat");
+            UpdateHpBar();
+            CheckFull();
+            CheckSpecialItem(item.itemData);
+            _lockTarget = false;
+        }
+
+        public void CheckSpecialItem(ItemData itemData)
+        {
+            switch (itemData.itemName)
+            {
+                default:
+                    break;
+            }
+        }
+
+        public void EnableTempImmortal(GearData gearData)
+        {
+            tempImmortal = true;
+            if (gearData == null)
+            {
+                return;
+            }
+            var duration = gearData.customValues.Find(x => x.id == "Duration").customValue;
+            var main = _immortalVFX.GetComponent<ParticleSystem>().main;
+            if (main.duration != Mathf.Max(duration - 0.5f, 0.5f))
+            {
+                main.duration = Mathf.Max(duration - 0.5f, 0.5f);
+            }
+            _immortalVFX.gameObject.SetActive(true);
+            _immortalVFX.GetComponent<ParticleSystem>().Play();
+            Invoke(nameof(ResetTempImmortal), duration);
+        }
+
+        public void ResetTempImmortal()
+        {
+            tempImmortal = false;
+            _immortalVFX.gameObject.SetActive(false);
         }
 
         public virtual void CheckFull()
@@ -380,7 +440,6 @@ namespace Factory
             float distance = Vector3.Distance(transform.localPosition, targetPosition);
             float time = distance / fishConfig.speed;
             time *= _currentTargetItem == null ? 1 : 0.75f;
-            Debug.Log((distance / fishConfig.speed) + "Time: " + time);
             Vector3 direction = targetPosition - transform.localPosition;
             Vector3 outputDirection = new Vector3(direction.x >= 0 ? 1 : -1, 1, 1);
             FlipWithDirection(outputDirection);

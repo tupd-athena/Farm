@@ -22,6 +22,7 @@ MonoBehaviour:
     level: 1
     baseValue: 0.2
     weight: 95
+    gearTypes: 0000000004000000
     customValues: []
   - id: 1
     itemName: Food1
@@ -32,6 +33,7 @@ MonoBehaviour:
     level: 1
     baseValue: 1
     weight: 5
+    gearTypes: 0100000002000000
     customValues: []
   - id: 2
     itemName: Food2
@@ -42,6 +44,7 @@ MonoBehaviour:
     level: 1
     baseValue: 1
     weight: 5
+    gearTypes: 0100000002000000
     customValues: []
   - id: 3
     itemName: Food3
@@ -52,6 +55,7 @@ MonoBehaviour:
     level: 1
     baseValue: 1
     weight: 5
+    gearTypes: 0100000002000000
     customValues: []
   - id: 4
     itemName: SpeedUP
@@ -62,8 +66,67 @@ MonoBehaviour:
     level: 1
     baseValue: 1
     weight: 5
+    gearTypes: 0100000005000000
     customValues:
     - id: coolDown
       customValue: 3
     - id: multiplier
+      customValue: 2
+  - id: 5
+    itemName: Multiplier
+    iconName: multiplier
+    tickValue: 1
+    maxValue: 1
+    cost: 12
+    level: 1
+    baseValue: 1
+    weight: 20
+    gearTypes: 0000000004000000
+    customValues:
+    - id: ver1
+      customValue: 1.2
+    - id: ver2
+      customValue: 1.5
+  - id: 6
+    itemName: Dopamine
+    iconName: F0
+    tickValue: 1
+    maxValue: 5
+    cost: 12
+    level: 1
+    baseValue: 1
+    weight: 20
+    gearTypes: 0100000005000000
+    customValues:
+    - id: Duration
+      customValue: 4
+  - id: 7
+    itemName: HomingBait
+    iconName: homing
+    tickValue: 1
+    maxValue: 5
+    cost: 12
+    level: 1
+    baseValue: 1
+    weight: 20
+    gearTypes: 0100000005000000
+    customValues: []
+  - id: 8
+    itemName: HeartBait
+    iconName: heart
+    tickValue: 1
+    maxValue: 5
+    cost: 12
+    level: 1
+    baseValue: 1
+    weight: 20
+    gearTypes: 0100000005000000
+    customValues:
+    - id: radius
+      customValue: 2
+    - id: depth
+      customValue: -2
+    - id: duration
+      customValue: 1
+    - id: cycle
       customValue: 2

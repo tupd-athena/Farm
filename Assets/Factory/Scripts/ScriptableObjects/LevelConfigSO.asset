@@ -18,7 +18,7 @@ MonoBehaviour:
     maxCoinDrop: 200
     gridSize: {x: 6, y: 4}
     maxHeadGearSlots: 1
-    initialLevelCurrency: 24
+    initialLevelCurrency: 240
     dayConfigurations:
     - dayNumber: 1
       numberOfFishes: 3

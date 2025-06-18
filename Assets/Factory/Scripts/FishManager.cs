@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Athena.Common.UI;
 using DG.Tweening;
@@ -307,6 +308,22 @@ namespace Factory
                 this.totalFish - _fishes.Count
             ).ToString();
             UpdateFishCountText(GameManager.Instance.GetCurrentDayConfig().maxInPool);
+        }
+
+        public void UseDopamine(GearData gearData)
+        {
+            foreach (var fish in _fishes.FindAll(x => x.state == FishState.Moving))
+            {
+                fish.EnableTempImmortal(gearData);
+            }
+        }
+
+        public FishController GetHungriest()
+        {
+            return _fishes
+                .FindAll(x => x.state == FishState.Moving && x.fishConfig.isBoss == false)
+                .OrderBy(x => x.currentTotalTickValue)
+                .FirstOrDefault();
         }
     }
 }

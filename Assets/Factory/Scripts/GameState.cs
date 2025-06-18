@@ -59,6 +59,7 @@ namespace Factory
                         FishManager.Instance.OpenGate();
                         GameManager.Instance.isStop = false;
                         GameManager.Instance.homeUI.OffsetGearItemContainer();
+                        GameManager.Instance.SetAllGearFillEmpty();
                     }
                     break;
 

@@ -65,7 +65,7 @@ namespace Factory
         {
             if (!_pooledObjects.ContainsKey(id))
             {
-                Debug.LogError($"Pool with ID {id} does not exist!");
+                Debug.Log($"<color=red>Pool with ID {id} does not exist!<>/color>");
                 return null;
             }
 
@@ -87,7 +87,12 @@ namespace Factory
         {
             if (!_pooledObjects.ContainsKey(id))
             {
-                Debug.LogError($"Pool with ID {id} does not exist!");
+                Debug.Log($"<color=red>Pool with ID {id} does not exist!<>/color>");
+                return;
+            }
+            if (obj == null)
+            {
+                Debug.Log("<color=red>Object to return is null!</color>");
                 return;
             }
             obj.transform.SetParent(transform);
@@ -98,7 +103,12 @@ namespace Factory
         {
             if (!_pooledObjects.ContainsKey(id))
             {
-                Debug.LogError($"Pool with ID {id} does not exist!");
+                Debug.Log($"<color=red>Pool with ID {id} does not exist!<>/color>");
+                return;
+            }
+            if (obj == null)
+            {
+                Debug.Log("<color=red>Object to return is null!</color>");
                 return;
             }
             StartCoroutine(ReturnObjectCoroutine(obj, id, delay));
@@ -115,7 +125,7 @@ namespace Factory
         {
             if (!_pooledObjects.ContainsKey(id))
             {
-                Debug.LogError($"Pool with ID {id} does not exist!");
+                Debug.Log($"<color=red>Pool with ID {id} does not exist!<>/color>");
                 return;
             }
             var pool = _pooledObjects[id];

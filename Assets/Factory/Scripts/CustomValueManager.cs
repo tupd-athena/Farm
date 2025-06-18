@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using NaughtyAttributes;
 using UnityEngine;
 
 public class CustomValueManager : MonoBehaviour
@@ -10,6 +11,8 @@ public class CustomValueManager : MonoBehaviour
     public const string MULTIPLIER_TICK_VALUE = "multiplierTickValue";
     public const string MULTIPLIER_HEAD_GEAR = "multiplierHeadGear";
 
+    [SerializeField, ReadOnly]
+    private List<string> specialTextGear = new List<string>() { "Multiplier", "SpeedUP" };
 
     void Awake()
     {

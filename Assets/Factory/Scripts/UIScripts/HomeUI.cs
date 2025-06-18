@@ -44,6 +44,8 @@ namespace Factory
 
         [SerializeField]
         private Image _warningEffect;
+        [SerializeField]
+        private Transform _boardTempContainer;
 
         [SerializeField]
         private List<ShopItem> _shopItems = new List<ShopItem>();
@@ -60,6 +62,7 @@ namespace Factory
 
         public TMP_Text TotalFishText => _totalFishText;
         public TMP_Text NotReadyFishAmountText => _notReadyFishAmountText;
+        public Transform BoardTempContainer => _boardTempContainer;
         public TMP_Text TotalGoldText => _goldText;
 
         private bool _isLockFirstOpenShop = false;

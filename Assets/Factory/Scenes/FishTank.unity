@@ -1637,6 +1637,15 @@ MonoBehaviour:
   - id: Ink
     prefab: {fileID: 7097720091373961796, guid: d99968058f57a484c8d83b75bd4af8a3, type: 3}
     amount: 3
+  - id: HeartBait
+    prefab: {fileID: 8875220718532698090, guid: 6d858b742c299457fa4abb132cd49aeb, type: 3}
+    amount: 5
+  - id: HomingBait
+    prefab: {fileID: 485183176386446917, guid: 292ce39a8e2b84a9bb579cf3b1e9c5b0, type: 3}
+    amount: 5
+  - id: Attractor
+    prefab: {fileID: 5077605138464971662, guid: 22a57f35e74f44f3db1f11e5a203a37e, type: 3}
+    amount: 5
 --- !u!1 &348391488
 GameObject:
   m_ObjectHideFlags: 0
@@ -8089,6 +8098,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   customValuesInGame: []
+  specialTextGear:
+  - Multiplier
+  - SpeedUP
 --- !u!1 &1482263586
 GameObject:
   m_ObjectHideFlags: 0

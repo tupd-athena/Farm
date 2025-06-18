@@ -2482,6 +2482,7 @@ MonoBehaviour:
   _levelProgressSlider: {fileID: 8113993868445961675}
   _goldContainer: {fileID: 4643920067619889287}
   _warningEffect: {fileID: 2946387592256215700}
+  _boardTempContainer: {fileID: 2078648335337166852}
   _shopItems:
   - gear: {fileID: 2857956720900321481}
     price: {fileID: 5938420854980137459}
@@ -4726,7 +4727,7 @@ RectTransform:
   m_GameObject: {fileID: 7297678247927653092}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6549185257978073894}

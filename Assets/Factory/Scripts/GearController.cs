@@ -121,14 +121,14 @@ namespace Factory
                 return;
             }
             gearData.Copy(data);
-            if (gearData.id == 0)
+            if (gearData.gearTypes.Contains(GearType.Text))
             {
                 _levelText.gameObject.SetActive(true);
                 _gearItemIcon.gameObject.SetActive(false);
-                _levelText.text = gearData.level.ToString();
-                SetGear(gearData.id);
+                SetTextGear();
+                SetGear(gearData.gearTypes);
             }
-            else
+            else if (gearData.gearTypes.Contains(GearType.Image))
             {
                 _levelText.gameObject.SetActive(false);
                 _gearItemIcon.gameObject.SetActive(true);
@@ -136,14 +136,35 @@ namespace Factory
                 if (sprite != null)
                 {
                     _gearItemIcon.sprite = sprite;
-                    SetGear(gearData.id);
+                    SetGear(gearData.gearTypes);
                 }
                 else
                 {
                     _gearItemIcon.sprite = null;
-                    SetGear(gearData.id);
+                    SetGear(gearData.gearTypes);
                 }
-                AddSpecialGear(data);
+            }
+            AddSpecialGear(data);
+        }
+
+        public void SetTextGear()
+        {
+            System.Random random = new System.Random();
+            switch (gearData.itemName)
+            {
+                case "Multiplier":
+                    var index = random.Next(0, gearData.customValues.Count);
+                    var value = gearData.customValues[index].customValue;
+                    if (gearData.baseValue != 1)
+                    {
+                        value = gearData.baseValue;
+                    }
+                    _levelText.text = "x" + value.ToString();
+                    gearData.baseValue = value;
+                    break;
+                default:
+                    _levelText.text = gearData.level.ToString();
+                    break;
             }
         }
 
@@ -153,6 +174,14 @@ namespace Factory
             {
                 case "SpeedUP":
                     gameObject.AddComponent<SpeedUpGear>();
+                    break;
+                case "Dopamine":
+                    OnFillComplete += () =>
+                    {
+                        FishManager.Instance.UseDopamine(gearData);
+                    };
+                    break;
+                default:
                     break;
             }
         }
@@ -167,14 +196,16 @@ namespace Factory
             }
         }
 
-        public void SetGear(int gear)
+        public void SetGear(List<GearType> gearTypes)
         {
-            if (isHead)
+            if (gearTypes.Contains(GearType.HeadGear))
             {
                 _gearIcon.sprite = _gear1;
                 return;
             }
-            _gearIcon.sprite = gear == 0 ? _gear6ForTextIcon : _gear6ForItemIcon;
+            _gearIcon.sprite = gearTypes.Contains(GearType.Text)
+                ? _gear6ForTextIcon
+                : _gear6ForItemIcon;
         }
 
         public void Connect(GearController gear, int direction)
@@ -222,7 +253,7 @@ namespace Factory
                 });
         }
 
-        public virtual void Rotate(float angle, float Amplifier)
+        public virtual void Rotate(float angle, float Amplifier, float Multiplier)
         {
             if (isStop)
             {
@@ -233,11 +264,11 @@ namespace Factory
                 .transform.DORotate(new Vector3(0, 0, angle + startAngle), 0.1f)
                 .OnComplete(() =>
                 {
-                    UpdateRotationProgress(Amplifier);
+                    UpdateRotationProgress(Amplifier, Multiplier);
                 });
         }
 
-        public virtual void UpdateRotationProgress(float Amplifier)
+        public virtual void UpdateRotationProgress(float Amplifier, float Multiplier)
         {
             _gearIcon.transform.localEulerAngles = new Vector3(0, 0, startAngle);
             if (gearData == null || gearData.id == 0 || isHead || isStop)
@@ -251,6 +282,7 @@ namespace Factory
                 Amplifier >= gearData.maxValue ? Amplifier - gearData.maxValue : 0;
             int bonus = (int)(AmplifierToTick / gearData.maxValue);
             var tickValue = gearData.tickValue + (bonus >= 1 ? 0 : AmplifierToTick);
+            tickValue *= Multiplier;
             if (isNotAddTickValue)
             {
                 tickValue = 0;
@@ -292,9 +324,11 @@ namespace Factory
             List<GearController> allConnectedGears = FindAllConnectedGearsOnBoard();
             direction = (direction + 1) % 4;
             float Amplifier = 0;
+            float Multiplier = 1;
+
             foreach (var gear in allConnectedGears)
             {
-                if (gear.gearData.id == 0)
+                if (gear.gearData.itemName == "Amplifier")
                 {
                     if (Amplifier == 0)
                     {
@@ -302,12 +336,15 @@ namespace Factory
                     }
                     Amplifier += ((0.2f * Mathf.Pow(2, gear.gearData.level - 1)));
                 }
+                if (gear.gearData.itemName == "Multiplier")
+                {
+                    Multiplier += gear.gearData.baseValue - 1;
+                }
             }
             Amplifier *= GameManager.Instance.GetGearDataByID(0).baseValue;
-            Debug.Log("Amplifier: " + Amplifier);
             foreach (var gear in allConnectedGears)
             {
-                gear.Rotate(45 * (gear.isReverse ? -1 : 1), Amplifier);
+                gear.Rotate(45 * (gear.isReverse ? -1 : 1), Amplifier, Multiplier);
             }
         }
 
@@ -464,10 +501,12 @@ namespace Factory
             )
                 return;
 
+            var parent = isInShop
+                ? GameManager.Instance.TempContainerUI.transform
+                : GameManager.Instance.TempContainer.transform;
             // Create a temporary gear
-            _tempGear = Instantiate(gameObject, GameManager.Instance.TempContainer.transform)
-                .GetComponent<GearController>();
-            _tempGear.transform.SetParent(GameManager.Instance.TempContainer.transform);
+            _tempGear = Instantiate(gameObject, parent).GetComponent<GearController>();
+            _tempGear.transform.SetParent(parent);
             _tempGear.transform.localScale = Vector3.zero;
             _tempGear.GetComponent<RectTransform>().sizeDelta = Vector2.one * 190;
             _tempGear.GetComponent<RectTransform>().DOScale(Vector3.one, 0.2f).SetEase(Ease.InBack);
