@@ -8,12 +8,7 @@ using UnityEngine.UI;
 
 namespace Factory
 {
-    public class GearController
-        : MonoBehaviour,
-            IDropHandler,
-            IBeginDragHandler,
-            IEndDragHandler,
-            IDragHandler
+    public class GearController : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
     {
         [SerializeField]
         protected Image _gearIcon;
@@ -71,6 +66,9 @@ namespace Factory
         public System.Action OnFillComplete;
 
         public System.Action OnDestroy;
+
+        private Vector3 _originalScale;
+        public TMP_Text LevelText => _levelText;
 
         protected void Awake()
         {
@@ -145,6 +143,7 @@ namespace Factory
                 }
             }
             AddSpecialGear(data);
+            _originalScale = transform.localScale;
         }
 
         public void SetTextGear()
@@ -410,106 +409,6 @@ namespace Factory
             return gears;
         }
 
-        public void OnDrop(PointerEventData eventData)
-        {
-            if (GameManager.Instance.GameState.CurrentState == GameStateType.Main)
-                return;
-
-            var droppedGear = eventData.pointerDrag.GetComponent<GearController>();
-            if (!droppedGear)
-                return;
-
-            if (isHead || isInShop || droppedGear == this || droppedGear.gearData == null)
-                return;
-
-            if (CanMergeAmplifierGears(droppedGear))
-            {
-                if (droppedGear.isInShop)
-                {
-                    droppedGear.OnDropShop?.Invoke(droppedGear.gearData);
-                }
-                MergeAmplifierGears(droppedGear);
-                return;
-            }
-            else if (droppedGear.isInShop && gearData != null)
-            {
-                return;
-            }
-
-            if (
-                gearData != null
-                && !string.IsNullOrEmpty(gearData.itemName)
-                && !string.IsNullOrEmpty(droppedGear.gearData.itemName)
-            )
-            {
-                SwapGears(droppedGear);
-            }
-            else
-            {
-                if (droppedGear.isInShop && !isInShop)
-                {
-                    if (!GameManager.Instance.CheckGold((int)droppedGear.gearData.cost))
-                    {
-                        Debug.Log("Not enough gold");
-                        GameManager.Instance.HomeUI.WarningGoldPanel();
-                        return;
-                    }
-                    droppedGear.OnDropShop?.Invoke(droppedGear.gearData);
-                }
-                TransferGear(droppedGear);
-            }
-            GameManager.Instance.CheckFirstOpenShop();
-        }
-
-        protected bool CanMergeAmplifierGears(GearController otherGear)
-        {
-            if (
-                GameManager.Instance.GameState.CurrentState == GameStateType.Shop
-                && otherGear.isInShop
-                && !isInShop
-                && !GameManager.Instance.CheckGold((int)otherGear.gearData.cost)
-            )
-            {
-                Debug.Log("Not enough gold");
-                GameManager.Instance.HomeUI.WarningGoldPanel();
-                return false;
-            }
-            return gearData != null
-                && otherGear.gearData.id == gearData.id
-                && gearData.id == 0
-                && otherGear.gearData.level == gearData.level;
-        }
-
-        protected void MergeAmplifierGears(GearController otherGear)
-        {
-            gearData.level++;
-            _levelText.text = gearData.level.ToString();
-            otherGear.Hide();
-        }
-
-        protected void SwapGears(GearController otherGear)
-        {
-            GearData tempGearData = new GearData();
-            tempGearData.Copy(gearData);
-
-            SetGearData(otherGear.gearData);
-            SetItemData(otherGear.gearData);
-            Show();
-            Debug.Log("SwapGears");
-            otherGear.SetGearData(tempGearData);
-            otherGear.SetItemData(tempGearData);
-            otherGear.Show();
-        }
-
-        protected void TransferGear(GearController otherGear)
-        {
-            SetGearData(otherGear.gearData);
-            SetItemData(otherGear.gearData);
-            Show();
-            otherGear.Hide();
-            GetComponent<CanvasGroup>().alpha = 1f;
-        }
-
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (
@@ -519,20 +418,23 @@ namespace Factory
             )
                 return;
 
+
             var parent = isInShop
                 ? GameManager.Instance.TempContainerUI.transform
                 : GameManager.Instance.TempContainer.transform;
             // Create a temporary gear
             _tempGear = Instantiate(gameObject, parent).GetComponent<GearController>();
             _tempGear.transform.SetParent(parent);
-            _tempGear.transform.localScale = Vector3.zero;
+            _tempGear.transform.localScale = Vector3.one * 1.5f;
             _tempGear.GetComponent<RectTransform>().sizeDelta = Vector2.one * 190;
             _tempGear.GetComponent<RectTransform>().DOScale(Vector3.one, 0.2f).SetEase(Ease.InBack);
 
             // Set the temporary gear's properties
             _tempGear._gearIcon.raycastTarget = false;
             _tempGear.GetComponent<CanvasGroup>().blocksRaycasts = false;
-            GetComponent<CanvasGroup>().alpha = 0.5f;
+            _gui.transform.DOScale(Vector3.one * 0, 0.2f).SetEase(Ease.InBack);
+            GetComponent<CanvasGroup>().alpha = 0.6f;
+            GameManager.Instance.DisableGearTrigger();
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -553,11 +455,12 @@ namespace Factory
                 eventData.pressEventCamera,
                 out position
             );
-            _tempGear.transform.localPosition = position;
+            _tempGear.transform.localPosition = position + new Vector2(0, 100);
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
+            GameManager.Instance.EnableGearTrigger();
             if (GameManager.Instance.GameState.CurrentState == GameStateType.Main)
                 return;
 
@@ -567,6 +470,7 @@ namespace Factory
                 _tempGear = null;
             }
             GetComponent<CanvasGroup>().alpha = 1f;
+            _gui.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.InBack);
         }
     }
 

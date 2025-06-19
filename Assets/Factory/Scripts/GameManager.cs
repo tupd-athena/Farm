@@ -68,6 +68,21 @@ namespace Factory
             _gameState = GetComponent<GameState>();
         }
 
+        public void DisableGearTrigger()
+        {
+            foreach (var gear in _gearControllers)
+            {
+                gear.GetComponent<Image>().raycastTarget = false;
+            }
+        }
+        public void EnableGearTrigger()
+        {
+            foreach (var gear in _gearControllers)
+            {
+                gear.GetComponent<Image>().raycastTarget = true;
+            }
+        }
+
         public void Start()
         {
             currentLevel = 0;

@@ -35,7 +35,6 @@ public class HomingBait : MonoBehaviour
             Debug.Log("No fish found");
             targetFish = null;
             itemController.canCollect = true;
-            GetComponent<Rigidbody2D>().gravityScale = 0.5f;
         }
     }
 

@@ -108,16 +108,14 @@ namespace Factory
                 .DORotate(new Vector3(0, 0, 90), 4f, RotateMode.LocalAxisAdd)
                 .SetEase(Ease.Linear)
                 .SetLoops(-1, LoopType.Yoyo);
-            var moveTask = transform
-                .DOLocalMoveY(-0.3f, 1f)
-                .OnComplete(() =>
+            DOVirtual.DelayedCall(
+                1f,
+                () =>
                 {
                     isInWater = true;
                     canCollect = true;
-                })
-                .AsyncWaitForCompletion();
-            _asyncTasks.Add(moveTask);
-            await moveTask;
+                }
+            );
             if (itemData.dropType == DropType.Leaf)
             {
                 var leafTask = SetLeafDrop();
@@ -333,7 +331,7 @@ namespace Factory
                     {
                         dropCompleted = true;
                         OnDropToSurface?.Invoke();
-                        FreezeConstrain();
+                        // FreezeConstrain();
                     }
                     if (hit.collider.CompareTag("Item") && !isCollected && mergeable)
                     {
