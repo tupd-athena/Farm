@@ -135,7 +135,6 @@ namespace Factory
             await Task.Delay(2000);
             FishManager.Instance.ClearFishes();
             currentDay++;
-            ClearItems();
             Debug.Log($"NextDay {currentDay}");
             isStop = true;
             if (GetCurrentDayConfig() == null)
@@ -145,7 +144,6 @@ namespace Factory
             }
             _currentLevelConfig = GetCurrentLevelConfig();
             await homeUI.ShowGameStartPanel();
-            ClearItems();
             InitBoxes(GetCurrentDayConfig().fishConfigs);
             UpdateGold(_gold + GetCurrentDayConfig().initialDayCurrency);
             Debug.Log($"UpdateGold + {_currentLevelConfig.initialLevelCurrency}");
@@ -204,7 +202,6 @@ namespace Factory
         public void ChangeGameState(GameStateType state)
         {
             _gameState.SetState(state);
-            ClearItems();
         }
 
         public void ActivateAllHeadGears()
@@ -324,6 +321,10 @@ namespace Factory
                     {
                         gearController.startAngle = (45 / 2f);
                     }
+                    else
+                    {
+                        gearController.startAngle = -3.5f;
+                    }
                     gearController.gridCoordinate = new Vector2(i, j);
                     gearController.Hide();
                     gearController.SetGear(new List<GearType> { GearType.Text });
@@ -332,6 +333,7 @@ namespace Factory
                         if (
                             !gearController.isHead
                             && gearController.itemData != null
+                            && gearController.gearData.gearTypes.Contains(GearType.Image)
                             && !isStop
                             && !CheckActiveItemCount()
                         )

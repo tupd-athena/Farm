@@ -168,8 +168,21 @@ namespace Factory
             }
         }
 
+        public void DisableAllSpecialComponets()
+        {
+            if (GetComponent<SpeedUpGear>() != null)
+            {
+                Destroy(GetComponent<SpeedUpGear>());
+            }
+            if (GetComponent<HomingBait>() != null)
+            {
+                Destroy(GetComponent<HomingBait>());
+            }
+        }
+
         public void AddSpecialGear(GearData data)
         {
+            DisableAllSpecialComponets();
             switch (data.itemName)
             {
                 case "SpeedUP":
@@ -193,6 +206,10 @@ namespace Factory
             {
                 itemData = new ItemData();
                 itemData.Copy(item);
+            }
+            else
+            {
+                itemData = null;
             }
         }
 
@@ -287,6 +304,7 @@ namespace Factory
             {
                 tickValue = 0;
                 AmplifierToCost = 0;
+                return;
             }
             currentTotalTickValue +=
                 (

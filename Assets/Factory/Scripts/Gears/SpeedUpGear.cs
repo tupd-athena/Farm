@@ -9,6 +9,7 @@ public class SpeedUpGear : MonoBehaviour
     private float _coolDown = 0;
     private float _coolDownMax = 0;
     public GearController gearController;
+    private Tween tween;
 
     public void Start()
     {
@@ -33,7 +34,8 @@ public class SpeedUpGear : MonoBehaviour
             gearController.gearData.customValues.Find(x => x.id == "multiplier").customValue
         );
         gearController.isNotAddTickValue = true;
-        DOVirtual
+        tween?.Kill();
+        tween = DOVirtual
             .Float(
                 0,
                 1,

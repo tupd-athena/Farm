@@ -103,12 +103,6 @@ namespace Factory
             hpBar.GetComponent<SpriteRenderer>().sortingOrder = 100 + index + 1;
             _spriteMask.frontSortingOrder = 100 + index + 2;
             _spriteMask.backSortingOrder = 100 + index;
-            Debug.Log(
-                "Front Sorting Order: "
-                    + _spriteMask.frontSortingOrder
-                    + " Back Sorting Order: "
-                    + _spriteMask.backSortingOrder
-            );
             SetLinesSortingOrder(100 + index + 2);
             this.fishConfig = fishConfig;
             currentTotalTickValue = 0;

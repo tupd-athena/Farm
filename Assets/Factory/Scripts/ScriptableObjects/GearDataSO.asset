@@ -102,7 +102,7 @@ MonoBehaviour:
       customValue: 4
   - id: 7
     itemName: HomingBait
-    iconName: homing
+    iconName: clover
     tickValue: 1
     maxValue: 5
     cost: 12
