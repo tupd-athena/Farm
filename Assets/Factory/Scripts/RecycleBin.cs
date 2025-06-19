@@ -10,7 +10,7 @@ public class RecycleBin : MonoBehaviour, IDropHandler
     public void OnDrop(PointerEventData eventData)
     {
         var gear = eventData.pointerDrag.GetComponent<GearController>();
-        if (gear != null)
+        if (gear != null && !gear.isInShop)
         {
             transform.DOScale(1.2f, 0.5f).SetEase(Ease.OutSine).SetLoops(2, LoopType.Yoyo);
             GameManager.Instance.AddGold((int)(gear.gearData.cost * 0.5f));
