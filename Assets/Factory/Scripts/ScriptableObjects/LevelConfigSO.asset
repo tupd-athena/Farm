@@ -18,7 +18,7 @@ MonoBehaviour:
     maxCoinDrop: 250
     gridSize: {x: 6, y: 4}
     maxHeadGearSlots: 1
-    initialLevelCurrency: 24
+    initialLevelCurrency: 240
     dayConfigurations:
     - dayNumber: 1
       numberOfFishes: 3
@@ -124,7 +124,7 @@ MonoBehaviour:
           size: 1
           depth: -3
           moveArea: 2.5
-      initialDayCurrency: 17
+      initialDayCurrency: 50
       percentOutputCash: 3
       maxInPool: 5
     - dayNumber: 3
@@ -225,7 +225,7 @@ MonoBehaviour:
           size: 1
           depth: -3
           moveArea: 2.5
-      initialDayCurrency: 40
+      initialDayCurrency: 80
       percentOutputCash: 30
       maxInPool: 5
     - dayNumber: 4
@@ -288,7 +288,7 @@ MonoBehaviour:
           size: 1
           depth: -4
           moveArea: 0.7
-      initialDayCurrency: 10
+      initialDayCurrency: 60
       percentOutputCash: 10
       maxInPool: 5
     - dayNumber: 5
@@ -408,7 +408,7 @@ MonoBehaviour:
           size: 1
           depth: -3
           moveArea: 2.5
-      initialDayCurrency: 20
+      initialDayCurrency: 60
       percentOutputCash: 56
       maxInPool: 5
   - levelNumber: 1
