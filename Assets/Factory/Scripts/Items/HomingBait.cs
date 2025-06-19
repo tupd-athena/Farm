@@ -13,6 +13,7 @@ public class HomingBait : MonoBehaviour
 
     public async Task Active()
     {
+        await Task.Delay(2000);
         Debug.Log("Active");
         itemController.canCollect = false;
         GetComponent<Rigidbody2D>().gravityScale = 0f;
@@ -21,7 +22,9 @@ public class HomingBait : MonoBehaviour
         targetFish = null;
         // Kill any existing move tween
         itemController.moveTween?.Kill();
-        await itemController.transform.DOLocalMoveY(-7.6f, 1f).AsyncWaitForCompletion();
+        await itemController
+            .transform.DOLocalMoveY(-7.6f, 20f / itemController.itemData.dropSpeed)
+            .AsyncWaitForCompletion();
         var fish = FishManager.Instance.GetHungriest();
         if (fish != null)
         {

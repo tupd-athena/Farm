@@ -12,6 +12,7 @@ public class HeartBait : MonoBehaviour
 
     public async Task Active()
     {
+        await Task.Delay(2000);
         System.Random random = new System.Random();
         Debug.Log("Active");
         itemController.canCollect = false;
@@ -29,7 +30,9 @@ public class HeartBait : MonoBehaviour
         var depth = gearData.customValues.FirstOrDefault(v => v.id == "depth").customValue;
         var duration = gearData.customValues.FirstOrDefault(v => v.id == "duration").customValue;
         depth += random.Next(-10, 10) * 0.01f;
-        await itemController.transform.DOLocalMoveY(depth, 1f).AsyncWaitForCompletion();
+        await itemController
+            .transform.DOLocalMoveY(depth, 1f / itemController.itemData.dropSpeed)
+            .AsyncWaitForCompletion();
         await Explode(radius, duration);
     }
 

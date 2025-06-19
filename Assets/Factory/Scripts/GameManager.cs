@@ -132,7 +132,7 @@ namespace Factory
 
         public async Task NextDay()
         {
-            await Task.Delay(2000);
+            await Task.Delay(1000);
             FishManager.Instance.ClearFishes();
             currentDay++;
             Debug.Log($"NextDay {currentDay}");
@@ -153,7 +153,7 @@ namespace Factory
 
         public async Task NextLevel()
         {
-            await Task.Delay(2000);
+            await Task.Delay(1000);
             FishManager.Instance.ClearFishes();
             isStop = true;
             currentLevel++;
@@ -170,7 +170,7 @@ namespace Factory
 
         public async Task ShowWinPanel()
         {
-            await Task.Delay(2000);
+            await Task.Delay(1000);
             FishManager.Instance.ClearFishes();
             isStop = true;
             Debug.Log($"ShowWinPanel");
@@ -182,7 +182,7 @@ namespace Factory
         public async Task ShowLosePanel()
         {
             FishManager.Instance.ClearFishes();
-            await Task.Delay(2000);
+            await Task.Delay(1000);
             isStop = true;
             Debug.Log($"ShowLosePanel");
             await homeUI.ShowLosePanel();
@@ -454,7 +454,7 @@ namespace Factory
         {
             var totalWeight = 0f;
 
-            var gearTypes = new List<GearType> { GearType.Food, GearType.Text, GearType.Image };
+            var gearTypes = new List<GearType> { GearType.Food, GearType.Text, GearType.Food };
             var index = 0;
             foreach (var shopItem in homeUI.ShopItems)
             {

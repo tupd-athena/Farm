@@ -18,7 +18,12 @@ public class SquidController : FishController
     public void DecreaseHPByClick()
     {
         // base.DecreaseHPByTime();
+        if (state != FishState.Moving)
+        {
+            return;
+        }
         currentTotalTickValue -= fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100;
+        UpdateHpBar();
         SetColor(new Color32(255, 125, 125, 255));
         if (currentTotalTickValue < 0)
         {
@@ -32,7 +37,7 @@ public class SquidController : FishController
                 spriteRenderer.DOFade(0, 3f);
             }
             transform
-                .DOLocalMoveY(0, 3f)
+                .DOLocalMoveY(-1, 3f)
                 .OnComplete(() =>
                 {
                     gameObject.SetActive(false);
@@ -69,6 +74,11 @@ public class SquidController : FishController
     {
         Debug.Log("Squid Init");
         this.fishConfig = fishConfig;
+        _hpBarMask.sortingOrder = 100 + index;
+        hpBar.GetComponent<SpriteRenderer>().sortingOrder = 100 + index + 1;
+        _spriteMask.frontSortingOrder = 100 + index + 2;
+        _spriteMask.backSortingOrder = 100 + index;
+        SetLinesSortingOrder(100 + index + 2);
         currentTotalTickValue = 0;
         state = FishState.Moving;
         SetSprite(0);

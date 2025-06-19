@@ -47,19 +47,19 @@ MonoBehaviour:
     gearId: 7
     itemName: HomingBait
     iconName: clover
-    cost: 0.5
+    cost: 0.15
     size: 1.5
     dropType: 0
-    dropSpeed: 4
+    dropSpeed: 3
     isCustom: 0
     mergeableItems: []
   - itemId: 4
     gearId: 8
     itemName: HeartBait
     iconName: heart
-    cost: 2
+    cost: 0.8
     size: 1
     dropType: 1
-    dropSpeed: 3
+    dropSpeed: 0.3
     isCustom: 0
     mergeableItems: []

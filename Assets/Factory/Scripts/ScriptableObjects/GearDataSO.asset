@@ -60,16 +60,16 @@ MonoBehaviour:
   - id: 4
     itemName: SpeedUP
     iconName: speedUp
-    tickValue: 0.8
-    maxValue: 5
-    cost: 12
+    tickValue: 1
+    maxValue: 12
+    cost: 80
     level: 1
     baseValue: 1
-    weight: 5
+    weight: 2
     gearTypes: 0100000005000000
     customValues:
     - id: coolDown
-      customValue: 3
+      customValue: 5
     - id: multiplier
       customValue: 2
   - id: 5
@@ -77,25 +77,23 @@ MonoBehaviour:
     iconName: multiplier
     tickValue: 1
     maxValue: 1
-    cost: 12
+    cost: 50
     level: 1
     baseValue: 1
-    weight: 20
+    weight: 2
     gearTypes: 0000000004000000
     customValues:
     - id: ver1
-      customValue: 1.2
-    - id: ver2
-      customValue: 1.5
+      customValue: 2
   - id: 6
     itemName: Dopamine
     iconName: F0
     tickValue: 1
-    maxValue: 5
-    cost: 12
+    maxValue: 6
+    cost: 30
     level: 1
     baseValue: 1
-    weight: 20
+    weight: 5
     gearTypes: 0100000005000000
     customValues:
     - id: Duration
@@ -104,29 +102,29 @@ MonoBehaviour:
     itemName: HomingBait
     iconName: clover
     tickValue: 1
-    maxValue: 5
-    cost: 12
+    maxValue: 8
+    cost: 40
     level: 1
     baseValue: 1
-    weight: 20
+    weight: 2
     gearTypes: 0100000005000000
     customValues: []
   - id: 8
     itemName: HeartBait
     iconName: heart
     tickValue: 1
-    maxValue: 5
-    cost: 12
+    maxValue: 10
+    cost: 40
     level: 1
     baseValue: 1
-    weight: 20
+    weight: 2
     gearTypes: 0100000005000000
     customValues:
     - id: radius
       customValue: 2
     - id: depth
-      customValue: -2
+      customValue: -3
     - id: duration
-      customValue: 1
+      customValue: 1.5
     - id: cycle
-      customValue: 2
+      customValue: 1

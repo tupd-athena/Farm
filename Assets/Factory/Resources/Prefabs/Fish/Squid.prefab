@@ -814,8 +814,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -1, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1.37, y: 1.21, z: 0.76}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8645911488489095727}
   - {fileID: 7403793954131126679}
@@ -7224,10 +7224,12 @@ MonoBehaviour:
     isBoss: 0
     sprites: []
     speed: 1
+    size: 1
     depth: 0
     moveArea: 0
   currentTotalTickValue: 0
   _confuseVFX: {fileID: 1012631476520324847}
+  _immortalVFX: {fileID: 0}
   hpBar: {fileID: 6553555621059790740}
   targetPosition: {x: 0, y: 0, z: 0}
   _lines:
@@ -7240,6 +7242,7 @@ MonoBehaviour:
   - {fileID: 1937041179831112266}
   - {fileID: 6602445877946976520}
   - {fileID: 6369998112094192426}
+  tempImmortal: 0
   _animator: {fileID: 5125848578760376250}
   isAttacking: 0
   attackTime: 5.5

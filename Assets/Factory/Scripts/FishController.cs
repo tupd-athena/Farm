@@ -184,7 +184,7 @@ namespace Factory
                 _hpBarMask.gameObject.SetActive(false);
                 _spriteRenderer.material.DOFade(0, 3f);
                 transform
-                    .DOMoveY(-0.5f, 3f)
+                    .DOLocalMoveY(-1f, 3f)
                     .OnComplete(() =>
                     {
                         gameObject.SetActive(false);
@@ -192,7 +192,7 @@ namespace Factory
                 _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
                 FishManager.Instance.CheckWinLose();
             }
-            if (state == FishState.Dead)
+            if (state == FishState.Dead || fishConfig.isBoss)
             {
                 return;
             }
