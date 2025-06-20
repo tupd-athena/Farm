@@ -11,6 +11,8 @@ namespace Factory
         public bool mergeable = false;
         public bool isCollected = false;
 
+        public Rigidbody2D rb;
+
         [SerializeField]
         private SpriteRenderer _itemIcon;
 
@@ -28,6 +30,7 @@ namespace Factory
 
         public bool canCollect = false;
         public System.Action OnDropToSurface;
+        public System.Action OnSpawn;
 
         private void KillAllTweens()
         {
@@ -60,6 +63,8 @@ namespace Factory
             dropCompleted = false;
             isInWater = false;
 
+            rb = GetComponent<Rigidbody2D>();
+
             // Kill all active tweens
             KillAllTweens();
 
@@ -73,8 +78,9 @@ namespace Factory
             UnfreezeConstrain();
             _itemIcon.color = new Color(1, 1, 1, 1);
             _itemIcon.gameObject.SetActive(true);
-            SetGravityInAir();
+            // SetGravityInAir();
             OnDropToSurface = null;
+            OnSpawn = null;
         }
 
         void OnDisable()
@@ -214,10 +220,12 @@ namespace Factory
             }
             UpdateItem();
             AddSpecialComponent();
+            OnSpawn?.Invoke();
         }
 
         public void AddSpecialComponent()
         {
+            OnSpawn += SetGravityInAir;
             switch (itemData.itemName)
             {
                 case "HomingBait":
@@ -228,11 +236,10 @@ namespace Factory
                     GetComponent<HomingBait>().enabled = true;
                     GetComponent<HomingBait>().itemController = this;
                     OnDropToSurface = null;
-                    OnDropToSurface += () =>
-                    {
-                        GetComponent<HomingBait>().Active();
-                    };
                     canCollect = false;
+                    FreezeConstrain();
+                    OnSpawn = null;
+                    OnSpawn += () => GetComponent<HomingBait>().Active();
                     break;
                 case "HeartBait":
                     if (GetComponent<HeartBait>() == null)
@@ -298,12 +305,12 @@ namespace Factory
             {
                 UsingRaycast();
             }
-            if (transform.position.y <= -5 && GetComponent<Collider2D>().isTrigger)
-            {
-                GetComponent<Rigidbody2D>().gravityScale = 0f;
-                GetComponent<Collider2D>().isTrigger = false;
-                CollectItem();
-            }
+            // if (transform.position.y <= -5 && GetComponent<Collider2D>().isTrigger)
+            // {
+            //     GetComponent<Rigidbody2D>().gravityScale = 0f;
+            //     GetComponent<Collider2D>().isTrigger = false;
+            //     CollectItem();
+            // }
         }
 
         void FreezeConstrain()

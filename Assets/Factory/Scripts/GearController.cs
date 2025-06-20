@@ -427,12 +427,12 @@ namespace Factory
             _tempGear.transform.SetParent(parent);
             _tempGear.transform.localScale = Vector3.one * 1.5f;
             _tempGear.GetComponent<RectTransform>().sizeDelta = Vector2.one * 190;
-            _tempGear.GetComponent<RectTransform>().DOScale(Vector3.one, 0.2f).SetEase(Ease.InBack);
+            _tempGear.GetComponent<RectTransform>().DOScale(Vector3.one, 0.2f).SetEase(Ease.InSine);
 
             // Set the temporary gear's properties
             _tempGear._gearIcon.raycastTarget = false;
             _tempGear.GetComponent<CanvasGroup>().blocksRaycasts = false;
-            _gui.transform.DOScale(Vector3.one * 0, 0.2f).SetEase(Ease.InBack);
+            _gui.transform.DOScale(Vector3.one * 0, 0.2f).SetEase(Ease.InSine);
             GetComponent<CanvasGroup>().alpha = 0.6f;
             GameManager.Instance.DisableGearTrigger();
         }
@@ -470,7 +470,7 @@ namespace Factory
                 _tempGear = null;
             }
             GetComponent<CanvasGroup>().alpha = 1f;
-            _gui.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.InBack);
+            _gui.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.InSine);
         }
     }
 

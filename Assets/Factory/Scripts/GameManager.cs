@@ -148,7 +148,7 @@ namespace Factory
         public async Task NextDay()
         {
             await Task.Delay(1000);
-            FishManager.Instance.ClearFishes();
+            await FishManager.Instance.ClearFishes();
             currentDay++;
             Debug.Log($"NextDay {currentDay}");
             isStop = true;
@@ -169,7 +169,7 @@ namespace Factory
         public async Task NextLevel()
         {
             await Task.Delay(1000);
-            FishManager.Instance.ClearFishes();
+            await FishManager.Instance.ClearFishes();
             isStop = true;
             currentLevel++;
             Debug.Log($"NextLevel {currentLevel}");
@@ -186,7 +186,7 @@ namespace Factory
         public async Task ShowWinPanel()
         {
             await Task.Delay(1000);
-            FishManager.Instance.ClearFishes();
+            await FishManager.Instance.ClearFishes();
             isStop = true;
             Debug.Log($"ShowWinPanel");
             await homeUI.ShowWinPanel();
@@ -196,7 +196,7 @@ namespace Factory
 
         public async Task ShowLosePanel()
         {
-            FishManager.Instance.ClearFishes();
+            await FishManager.Instance.ClearFishes();
             await Task.Delay(1000);
             isStop = true;
             Debug.Log($"ShowLosePanel");

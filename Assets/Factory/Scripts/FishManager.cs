@@ -127,7 +127,7 @@ namespace Factory
                 .AsyncWaitForCompletion();
             if (currentFishIndex >= _fishes.Count - 1)
             {
-                ClearFishes();
+                await ClearFishes();
                 await Task.Delay(1000);
                 await GameManager.Instance.NextDay();
                 return;
@@ -154,9 +154,10 @@ namespace Factory
             SpawnTextFloating(item.itemData.cost.ToString(), item.transform.position);
         }
 
-        public void ClearFishes()
+        public async Task ClearFishes()
         {
             DestroyFishes();
+            await Task.Delay(100);
             transform.DOKill();
             isFishClosing = true;
             _gate.transform.DOLocalMoveX(-2, 1f).SetEase(Ease.InSine);
@@ -172,7 +173,8 @@ namespace Factory
         {
             foreach (var fish in _fishes)
             {
-                Destroy(fish.gameObject);
+                fish.gameObject.SetActive(false);
+                Destroy(fish.gameObject, 2f);
             }
             _fishes.Clear();
         }
@@ -223,7 +225,7 @@ namespace Factory
 
         public async Task SpawnFish(List<FishConfigDay> fishConfigs)
         {
-            ClearFishes();
+            await ClearFishes();
             System.Random random = new System.Random();
             isFishClosing = false;
             foreach (var fishConfig in fishConfigs)
@@ -295,7 +297,7 @@ namespace Factory
 
         public async Task Init(List<FishConfigDay> fishConfigs)
         {
-            ClearFishes();
+            await ClearFishes();
             currentFishIndex = 0;
             totalFish = 0;
             isFishClosing = true;
@@ -318,12 +320,45 @@ namespace Factory
             }
         }
 
+        public FishController GetFishLowHp()
+        {
+            return _fishes
+                .FindAll(x =>
+                    x.state == FishState.Moving
+                    && x.fishConfig.isBoss == false
+                    && x.currentTotalTickValue > 0
+                    && x.currentTotalTickValue < x.fishConfig.fishCurrencyValue * 0.2f
+                )
+                .OrderBy(x => x.currentTotalTickValue)
+                .FirstOrDefault();
+        }
+
         public FishController GetHungriest()
         {
             return _fishes
                 .FindAll(x => x.state == FishState.Moving && x.fishConfig.isBoss == false)
                 .OrderBy(x => x.currentTotalTickValue)
                 .FirstOrDefault();
+        }
+
+        public FishController GetRandomFish()
+        {
+            if (_fishes.Count == 0)
+            {
+                return null;
+            }
+            System.Random random = new System.Random();
+            var fishes = _fishes.FindAll(x =>
+                x.state == FishState.Moving
+                && x.fishConfig.isBoss == false
+                && x.currentTotalTickValue < x.fishConfig.fishCurrencyValue
+            );
+            if (fishes.Count == 0)
+            {
+                return null;
+            }
+            int index = random.Next(0, fishes.Count);
+            return fishes[index];
         }
     }
 }

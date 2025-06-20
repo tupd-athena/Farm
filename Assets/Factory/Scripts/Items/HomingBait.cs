@@ -13,35 +13,59 @@ public class HomingBait : MonoBehaviour
 
     public async Task Active()
     {
-        await Task.Delay(2000);
-        Debug.Log("Active");
+        System.Random random = new System.Random();
         itemController.canCollect = false;
-        GetComponent<Rigidbody2D>().gravityScale = 0f;
-        GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        itemController.rb.gravityScale = 0f;
+        itemController.rb.velocity = Vector2.zero;
         GetComponent<Collider2D>().isTrigger = true;
         targetFish = null;
         // Kill any existing move tween
         itemController.moveTween?.Kill();
-        await itemController
-            .transform.DOLocalMoveY(-7.6f, 20f / itemController.itemData.dropSpeed)
-            .AsyncWaitForCompletion();
-        var fish = FishManager.Instance.GetHungriest();
-        if (fish != null)
+        transform.localEulerAngles = new Vector3(40, 0, 0);
+        transform
+            .DOLocalRotate(new Vector3(40, 0, random.Next(-30, 30)), 1f)
+            .SetLoops(-1, LoopType.Yoyo);
+        var y = random.Next(-75, -65) * 0.1f;
+        var x = random.Next(-35, 35) * 0.1f;
+        transform.localPosition = new Vector3(x, y, 0);
+        transform.localScale = new Vector3(0, 0, 0);
+        await transform.DOScale(new Vector3(1, 1, 1), 0.5f).AsyncWaitForCompletion();
+        await Task.Delay(random.Next(500, 2000));
+        FindTarget();
+    }
+
+    public void FindTarget()
+    {
+        System.Random random = new System.Random();
+        var fishController = FishManager.Instance.GetRandomFish();
+        if (fishController == null)
         {
-            MoveToFish(fish);
+            Debug.LogWarning("No fish controllers found");
+            Invoke(nameof(FindTarget), random.Next(500, 2000) * 0.001f);
+            return;
         }
-        else
-        {
-            Debug.Log("No fish found");
-            targetFish = null;
-            itemController.canCollect = true;
-        }
+        targetFish = fishController;
+        MoveToFish(targetFish);
     }
 
     private async Task MoveToFish(FishController fish)
     {
+        if(fish == null)
+        {
+            Debug.LogError("Fish is null, cannot move to fish");
+            FindTarget();
+            return;
+        }
         try
         {
+            transform.DOKill();
+            await transform
+                .DOLocalRotate(new Vector3(0, 0, 180), 1f, RotateMode.LocalAxisAdd)
+                .SetEase(Ease.InExpo)
+                .AsyncWaitForCompletion();
+
+            transform.DOScale(0, 0.3f).SetEase(Ease.InExpo);
+
             targetFish = fish;
             var particle = PoolSystem.Instance.GetObject("HomingBait");
             if (particle == null)

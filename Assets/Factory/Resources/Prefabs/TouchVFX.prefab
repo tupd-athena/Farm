@@ -9738,7 +9738,7 @@ GameObject:
   - component: {fileID: 849538811991125424}
   - component: {fileID: 8016731975650467688}
   m_Layer: 5
-  m_Name: EffectTouch
+  m_Name: TouchVFX
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

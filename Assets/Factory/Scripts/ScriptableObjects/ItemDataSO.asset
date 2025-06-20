@@ -46,7 +46,7 @@ MonoBehaviour:
   - itemId: 3
     gearId: 7
     itemName: HomingBait
-    iconName: clover
+    iconName: clover_1
     cost: 0.15
     size: 1.5
     dropType: 0

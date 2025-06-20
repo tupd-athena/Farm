@@ -137,6 +137,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mergeable: 0
   isCollected: 0
+  rb: {fileID: 0}
   _itemIcon: {fileID: 2751136487952522101}
   itemData:
     itemId: 0

@@ -106,7 +106,7 @@ MonoBehaviour:
     cost: 40
     level: 1
     baseValue: 1
-    weight: 2
+    weight: 200
     gearTypes: 0100000005000000
     customValues: []
   - id: 8
