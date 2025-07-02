@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Atom;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -38,6 +40,9 @@ namespace Factory
         private ItemDataSO _itemDataSO;
 
         [SerializeField]
+        private ArtifactConfigSO _artifactConfigSO;
+
+        [SerializeField]
         private GridLayoutGroup _gearItemContainer;
         public GameObject TempContainerUI => homeUI.BoardTempContainer.gameObject;
         public GameObject TempContainer;
@@ -45,8 +50,12 @@ namespace Factory
         [SerializeField]
         private LevelConfigSO _levelConfigSO;
 
+        public Transform bottom;
+
         private List<GameObject> _activeItems = new List<GameObject>();
         public List<GearController> _gearControllers = new List<GearController>();
+
+        public List<GameObject> artifacts = new List<GameObject>();
         public GameObject ItemContainer => _itemContainer;
         public HomeUI HomeUI => homeUI;
         private const string ITEM_POOL_ID = "Item";
@@ -57,8 +66,23 @@ namespace Factory
         private bool _isFirstOpenShop = false;
         private int _gold = 0;
         public GridLayoutGroup GearItemContainer => _gearItemContainer;
+        public List<GameObject> ActiveItems => _activeItems;
+
+        public System.Action OnGameStart;
 
         public bool isStop = false;
+
+        public Tween airPumpTween;
+
+        public float GetBottomYWithOffset(float offset = 0.1f)
+        {
+            return bottom.position.y + offset;
+        }
+
+        public float Scale()
+        {
+            return bottom.position.y / -8f;
+        }
 
         void Awake()
         {
@@ -66,6 +90,8 @@ namespace Factory
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 0;
             _gameState = GetComponent<GameState>();
+            OnGameStart = null;
+            Debug.Log("Bottom Y: " + GetBottomYWithOffset());
         }
 
         public void DisableGearTrigger()
@@ -75,6 +101,7 @@ namespace Factory
                 gear.GetComponent<Image>().raycastTarget = false;
             }
         }
+
         public void EnableGearTrigger()
         {
             foreach (var gear in _gearControllers)
@@ -98,9 +125,16 @@ namespace Factory
             LoadLevel(0);
         }
 
+        public void ResetArtifactTweens()
+        {
+            airPumpTween?.Kill();
+            airPumpTween = null;
+            CancelInvoke(nameof(SpawnPearl));
+        }
+
         public async Task LoadLevel(int level)
         {
-            Debug.Log($"LoadLevel {level}");
+            OnGameStart = null;
             _isFirstOpenShop = false;
             isStop = true;
             currentLevel = level;
@@ -108,9 +142,13 @@ namespace Factory
             currentDay = 0;
             _gold = 0;
             CustomValueManager.Instance.ClearCustomValueInGame();
+            Debug.Log($"LoadLevel {level}");
             InitGears(_currentLevelConfig.gridSize);
             InitBoxes(GetCurrentDayConfig().fishConfigs);
             UpdateGold(_gold + _currentLevelConfig.initialLevelCurrency);
+            artifacts.ForEach(a => a.SetActive(false));
+            // homeUI.HideArtifactPopup();
+            RandomArtifactPopup();
             ChangeGameState(GameStateType.Shop);
             homeUI.UpdateDay();
             await homeUI.ShowGameStartPanel();
@@ -149,6 +187,8 @@ namespace Factory
         {
             await Task.Delay(1000);
             await FishManager.Instance.ClearFishes();
+            CancelInvoke(nameof(SpawnPearl));
+            ClearItems();
             currentDay++;
             Debug.Log($"NextDay {currentDay}");
             isStop = true;
@@ -170,6 +210,7 @@ namespace Factory
         {
             await Task.Delay(1000);
             await FishManager.Instance.ClearFishes();
+            CancelInvoke(nameof(SpawnPearl));
             isStop = true;
             currentLevel++;
             Debug.Log($"NextLevel {currentLevel}");
@@ -187,6 +228,7 @@ namespace Factory
         {
             await Task.Delay(1000);
             await FishManager.Instance.ClearFishes();
+            CancelInvoke(nameof(SpawnPearl));
             isStop = true;
             Debug.Log($"ShowWinPanel");
             await homeUI.ShowWinPanel();
@@ -197,6 +239,7 @@ namespace Factory
         public async Task ShowLosePanel()
         {
             await FishManager.Instance.ClearFishes();
+            CancelInvoke(nameof(SpawnPearl));
             await Task.Delay(1000);
             isStop = true;
             Debug.Log($"ShowLosePanel");
@@ -210,6 +253,8 @@ namespace Factory
         public void StartGame()
         {
             ChangeGameState(GameStateType.Main);
+            CancelInvoke(nameof(SpawnPearl));
+            OnGameStart?.Invoke();
             FishManager.Instance.SpawnFish(GameManager.Instance.GetCurrentDayConfig().fishConfigs);
             // ActivateAllHeadGears();
         }
@@ -258,8 +303,59 @@ namespace Factory
             item.transform.SetParent(FishManager.Instance._fishParent.transform);
             position = position * mainCamera.orthographicSize / 6.4f;
             item.transform.position = new Vector3(position.x, position.y, 0);
+            item.transform.localEulerAngles = new Vector3(0, 0, 0);
+            item.transform.localScale = new Vector3(1, 1, 1);
             float cost = (float)(checkItemData.cost * gearController.gearData.level + Amplifier);
             item.GetComponent<ItemController>().SetItemData(checkItemData, cost);
+            System.Random random = new System.Random();
+            float randomX = random.Next(-3, 3);
+            item.GetComponent<Rigidbody2D>().AddForce(new Vector2(randomX, 0), ForceMode2D.Impulse);
+            _activeItems.Add(item);
+            return item;
+        }
+
+        public GameObject SpawnItem(Vector2 position, ItemController itemController)
+        {
+            var checkItemData = itemController;
+            if (checkItemData == null)
+            {
+                return null;
+            }
+            var item = _itemPool.GetObject(ITEM_POOL_ID);
+            item.GetComponent<Collider2D>().enabled = true;
+            item.GetComponent<SpriteRenderer>().material = new Material(
+                item.GetComponent<SpriteRenderer>().material
+            );
+            item.GetComponent<SpriteRenderer>().material.SetFloat("_Dissolve", 1f);
+            item.transform.SetParent(FishManager.Instance._fishParent.transform);
+            position = position * mainCamera.orthographicSize / 6.4f;
+            item.transform.position = new Vector3(position.x, position.y, 0);
+            item.transform.localEulerAngles = new Vector3(0, 0, 0);
+            item.transform.localScale = new Vector3(1, 1, 1);
+            float cost = (float)(checkItemData.itemData.cost);
+            item.GetComponent<ItemController>().SetItemData(checkItemData.itemData, cost);
+            System.Random random = new System.Random();
+            float randomX = random.Next(-3, 3);
+            item.GetComponent<Rigidbody2D>().AddForce(new Vector2(randomX, 0), ForceMode2D.Impulse);
+            _activeItems.Add(item);
+            return item;
+        }
+
+        public GameObject SpawnItem(Vector2 position, ItemData itemData)
+        {
+            var item = _itemPool.GetObject(ITEM_POOL_ID);
+            item.GetComponent<Collider2D>().enabled = true;
+            item.GetComponent<SpriteRenderer>().material = new Material(
+                item.GetComponent<SpriteRenderer>().material
+            );
+            item.GetComponent<SpriteRenderer>().material.SetFloat("_Dissolve", 1f);
+            item.transform.SetParent(FishManager.Instance._fishParent.transform);
+            position = position * mainCamera.orthographicSize / 6.4f;
+            item.transform.position = new Vector3(position.x, position.y, 0);
+            item.transform.localEulerAngles = new Vector3(0, 0, 0);
+            item.transform.localScale = new Vector3(1, 1, 1);
+            float cost = (float)(itemData.cost);
+            item.GetComponent<ItemController>().SetItemData(itemData, cost);
             System.Random random = new System.Random();
             float randomX = random.Next(-3, 3);
             item.GetComponent<Rigidbody2D>().AddForce(new Vector2(randomX, 0), ForceMode2D.Impulse);
@@ -449,6 +545,7 @@ namespace Factory
 
         public void CollectItem(ItemController item)
         {
+            item.Clear();
             _itemPool.ReturnObject(item.gameObject, ITEM_POOL_ID);
             if (_activeItems.Contains(item.gameObject))
             {
@@ -570,6 +667,7 @@ namespace Factory
                     continue;
                 }
                 gear.FillItemIcon(0);
+                gear.currentTotalTickValue = 0;
             }
         }
 
@@ -637,6 +735,145 @@ namespace Factory
             CheckGoldAllGearsInShop();
         }
 
+        public void ActiveArtifact(ArtifactData artifactData)
+        {
+            string artifactName = artifactData.artifactId;
+            homeUI.HideArtifactPopup();
+            switch (artifactName)
+            {
+                case "sacredTotem": // Artifact 1
+                    CustomValueManager.Instance.AddCustomValueInGame(
+                        CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SCARED_TOTEM,
+                        artifactData.GetValueByName("percentIncrease")
+                    );
+                    artifacts[0].SetActive(true);
+                    break;
+                case "airPump": // Artifact 2
+                    ActiveTheAirPump(artifactData);
+                    break;
+                case "clam": // Artifact 3
+                    OnGameStart += () =>
+                        Invoke(nameof(SpawnPearl), artifactData.GetValueByName("cooldown"));
+                    artifacts[2].SetActive(true);
+                    break;
+                case "treasure": // Artifact 4
+                    AddGold((int)artifactData.GetValueByName("value"));
+                    artifacts[3].SetActive(true);
+                    break;
+                case "bank": // Artifact 5
+                    CustomValueManager.Instance.AddCustomValueInGame(
+                        CustomValueManager.FISH_GOLD_BONUS,
+                        artifactData.GetValueByName("value")
+                    );
+                    artifacts[6].SetActive(true);
+                    break;
+                case "fillFull":
+                    FillFull();
+                    artifacts[4].SetActive(true);
+                    break;
+                case "heartBonus": // Artifact 6
+                    CustomValueManager.Instance.AddCustomValueInGame(
+                        CustomValueManager.HEART_BONUS,
+                        artifactData.GetValueByName("value")
+                    );
+                    FishManager.Instance.UpdateFishCountText(
+                        GameManager.Instance.GetCurrentDayConfig().maxInPool
+                            + (int)
+                                CustomValueManager.Instance.GetCustomValueInGame(
+                                    CustomValueManager.HEART_BONUS
+                                )
+                    );
+                    artifacts[5].SetActive(true);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public void FillFull()
+        {
+            foreach (var gear in _gearControllers)
+            {
+                if (gear.gearData == null && !gear.isHead)
+                {
+                    gear.SetGearData(_gearDataSO.gearDataList[0]);
+                    gear.SetItemData(_gearDataSO.gearDataList[0]);
+                    gear.Show();
+                }
+            }
+            homeUI.HideArtifactPopup();
+        }
+
+        public void ActiveTheAirPump(ArtifactData artifactData)
+        {
+            artifacts[1].SetActive(true);
+            airPumpTween?.Kill();
+            airPumpTween = DOVirtual.DelayedCall(
+                artifactData.GetValueByName("cooldown"),
+                () =>
+                {
+                    artifacts[1].GetComponentInChildren<ParticleSystem>().Stop();
+                    CustomValueManager.Instance.AddCustomValueInGame(
+                        CustomValueManager.REDUCE_FISH_TICK_RATE,
+                        artifactData.GetValueByName("percentDecrease")
+                    );
+                    var main = artifacts[1].GetComponentInChildren<ParticleSystem>().main;
+                    main.loop = false;
+                    main.playOnAwake = false;
+                    main.duration = artifactData.GetValueByName("duration") * 0.8f;
+                    artifacts[1].GetComponentInChildren<ParticleSystem>().Play();
+
+                    airPumpTween = DOVirtual.DelayedCall(
+                        artifactData.GetValueByName("duration"),
+                        () =>
+                        {
+                            CustomValueManager.Instance.RemoveCustomValueInGame(
+                                CustomValueManager.REDUCE_FISH_TICK_RATE,
+                                artifactData.GetValueByName("percentDecrease")
+                            );
+                            ActiveTheAirPump(artifactData);
+                        }
+                    );
+                }
+            );
+        }
+
+        public void RandomArtifactPopup()
+        {
+            System.Random random = new System.Random();
+            int amount = random.Next(1, _artifactConfigSO.artifactDatas.Count + 1);
+            List<int> currentIndexes = new List<int>();
+            List<ArtifactData> currentArtifacts = new List<ArtifactData>();
+            for (int i = 0; i < _artifactConfigSO.artifactDatas.Count; i++)
+            {
+                currentIndexes.Add(i);
+            }
+            for (int i = 0; i < amount; i++)
+            {
+                int randomIndex = random.Next(0, currentIndexes.Count);
+                int artifactIndex = currentIndexes[randomIndex];
+                ArtifactData artifactData = _artifactConfigSO.artifactDatas[artifactIndex];
+                currentArtifacts.Add(artifactData);
+                currentIndexes.RemoveAt(randomIndex);
+            }
+            homeUI.ShowArtifactPopup(currentArtifacts);
+        }
+
+        public void SpawnPearl()
+        {
+            CancelInvoke(nameof(SpawnPearl));
+            var pearl = Instantiate(
+                Resources.Load<GameObject>("Prefabs/Pearl"),
+                _itemContainer.transform
+            );
+            var artifact = _artifactConfigSO.artifactDatas.FirstOrDefault(a =>
+                a.artifactId == "clam"
+            );
+            pearl.transform.position = artifacts[2].transform.position;
+            pearl.GetComponent<CoinController>().value = (int)artifact.GetValueByName("gold");
+            Invoke(nameof(SpawnPearl), artifact.GetValueByName("cooldown"));
+        }
+
         public ItemData GetItemDataByGearID(int id)
         {
             return _itemDataSO.itemDataList.Find(item => item.gearId == id);
@@ -650,6 +887,18 @@ namespace Factory
         public GearData GetGearDataByID(int id)
         {
             return _gearDataSO.gearDataList.Find(gear => gear.id == id);
+        }
+
+        public Sprite GetArtifactRaritySprite(ArtifactType artifactType)
+        {
+            return _artifactConfigSO
+                .artifactTypeDatas.Find(a => a.artifactType == artifactType)
+                .artifactFrame;
+        }
+
+        public Sprite GetGearBaseColorSprite(GearBaseColorType type)
+        {
+            return _gearDataSO.gearBaseColors.Find(c => c.type == type).sprite;
         }
     }
 }

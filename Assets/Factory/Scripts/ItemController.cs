@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using DG.Tweening;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Factory
@@ -29,8 +30,13 @@ namespace Factory
         private List<Task> _asyncTasks = new List<Task>();
 
         public bool canCollect = false;
+        public ParticleSystem waterSplashVFX;
         public System.Action OnDropToSurface;
         public System.Action OnSpawn;
+
+        private List<GameObject> _objectsToDestroy = new List<GameObject>();
+
+        public float existTime = 10f;
 
         private void KillAllTweens()
         {
@@ -86,6 +92,14 @@ namespace Factory
         void OnDisable()
         {
             KillAllTweens();
+            // Clear the list of objects to destroy
+            foreach (var obj in _objectsToDestroy)
+            {
+                if (obj != null)
+                {
+                    Destroy(obj);
+                }
+            }
         }
 
         private void SetMergeable()
@@ -140,7 +154,7 @@ namespace Factory
         {
             moveTween = null;
             transform
-                .DOLocalMoveY(-7.8f, 24f / itemData.dropSpeed)
+                .DOMoveY(GameManager.Instance.GetBottomYWithOffset(), 15f / itemData.dropSpeed)
                 .OnComplete(async () =>
                 {
                     var delayTask = Task.Delay(1000);
@@ -158,7 +172,7 @@ namespace Factory
 
             // Create the zigzag sequence
             moveTween = transform
-                .DOLocalMoveY(-7.8f, 15f / itemData.dropSpeed)
+                .DOMoveY(GameManager.Instance.GetBottomYWithOffset(), 15f / itemData.dropSpeed)
                 .OnComplete(async () =>
                 {
                     var delayTask = Task.Delay(1000);
@@ -170,7 +184,7 @@ namespace Factory
                 });
             for (int i = 0; i < 5; i++)
             {
-                if (transform.localPosition.y <= -7)
+                if (transform.localPosition.y <= GameManager.Instance.GetBottomYWithOffset() * 0.8f)
                 {
                     moveTween.Kill();
                     var delayTask = Task.Delay(1000);
@@ -214,6 +228,7 @@ namespace Factory
         public void SetItemData(ItemData itemData, float cost = 0)
         {
             this.itemData.Copy(itemData);
+            existTime = 0;
             if (cost > 0)
             {
                 this.itemData.cost = cost;
@@ -229,17 +244,34 @@ namespace Factory
             switch (itemData.itemName)
             {
                 case "HomingBait":
-                    if (GetComponent<HomingBait>() == null)
+                    var gearData0 = GameManager.Instance.GetGearDataByID(itemData.gearId);
+                    if (!isInWater)
                     {
-                        gameObject.AddComponent<HomingBait>();
+                        if (GetComponent<HomingBait>() == null)
+                        {
+                            gameObject.AddComponent<HomingBait>();
+                        }
+                        OnDropToSurface = null;
+                        OnDropToSurface += () =>
+                        {
+                            GetComponent<HomingBait>().Active();
+                        };
+                        GetComponent<HomingBait>().enabled = true;
+                        GetComponent<HomingBait>().itemController = this;
+                        var pudding = Instantiate(
+                            Resources.Load<GameObject>("Prefabs/Item/Pudding"),
+                            transform
+                        );
+                        _objectsToDestroy.Add(pudding);
+                        SetSprite(Resources.Load<Sprite>("Sprites/" + gearData0.iconName));
+                        _itemIcon.gameObject.SetActive(false);
+                        FreezeConstrain();
+                        canCollect = false;
                     }
-                    GetComponent<HomingBait>().enabled = true;
-                    GetComponent<HomingBait>().itemController = this;
-                    OnDropToSurface = null;
-                    canCollect = false;
-                    FreezeConstrain();
-                    OnSpawn = null;
-                    OnSpawn += () => GetComponent<HomingBait>().Active();
+                    else
+                    {
+                        SetSprite(Resources.Load<Sprite>("Sprites/" + itemData.iconName));
+                    }
                     break;
                 case "HeartBait":
                     if (GetComponent<HeartBait>() == null)
@@ -254,6 +286,56 @@ namespace Factory
                         GetComponent<HeartBait>().Active();
                     };
                     canCollect = false;
+                    break;
+                case "TheTwin":
+                    if (GetComponent<TheTwinFood>() == null)
+                    {
+                        gameObject.AddComponent<TheTwinFood>();
+                    }
+                    GetComponent<TheTwinFood>().enabled = true;
+                    GetComponent<TheTwinFood>().itemController = this;
+                    var gearData1 = GameManager.Instance.GetGearDataByID(itemData.gearId);
+                    if (!isInWater)
+                    {
+                        SetSprite(Resources.Load<Sprite>("Sprites/" + gearData1.iconName));
+                    }
+                    OnDropToSurface = null;
+                    OnDropToSurface += () =>
+                    {
+                        SetSprite(Resources.Load<Sprite>("Sprites/" + itemData.iconName));
+                        GetComponent<TheTwinFood>().Active();
+                    };
+                    canCollect = false;
+                    break;
+                case "TheTripple":
+                    var gearData2 = GameManager.Instance.GetGearDataByID(itemData.gearId);
+                    if (!isInWater)
+                    {
+                        OnDropToSurface = null;
+                        OnDropToSurface += () =>
+                        {
+                            GetComponent<TheTrippleFood>().Active();
+                        };
+                        if (GetComponent<TheTrippleFood>() == null)
+                        {
+                            gameObject.AddComponent<TheTrippleFood>();
+                        }
+                        GetComponent<TheTrippleFood>().enabled = true;
+                        GetComponent<TheTrippleFood>().itemController = this;
+                        var pudding = Instantiate(
+                            Resources.Load<GameObject>("Prefabs/Item/Pudding"),
+                            transform
+                        );
+                        _objectsToDestroy.Add(pudding);
+                        SetSprite(Resources.Load<Sprite>("Sprites/" + gearData2.iconName));
+                        _itemIcon.gameObject.SetActive(false);
+                        FreezeConstrain();
+                        canCollect = false;
+                    }
+                    else
+                    {
+                        SetSprite(Resources.Load<Sprite>("Sprites/" + itemData.iconName));
+                    }
                     break;
                 default:
                     OnDropToSurface = null;
@@ -279,6 +361,15 @@ namespace Factory
             transform.localScale = Vector3.one * itemData.size;
         }
 
+        public void SetSprite(Sprite sprite)
+        {
+            if (_itemIcon == null)
+            {
+                _itemIcon = GetComponent<SpriteRenderer>();
+            }
+            _itemIcon.sprite = sprite;
+        }
+
         public void Dissolve()
         {
             var material = GetComponent<SpriteRenderer>().material;
@@ -299,8 +390,44 @@ namespace Factory
                 });
         }
 
+        public void Clear()
+        {
+            // Clear the list of objects to destroy
+            if(GetComponent<HomingBait>() != null)
+            {
+                Destroy(GetComponent<HomingBait>());
+            }
+            if(GetComponent<HeartBait>() != null)
+            {
+                Destroy(GetComponent<HeartBait>());
+            }
+            if(GetComponent<TheTwinFood>() != null)
+            {
+                Destroy(GetComponent<TheTwinFood>());
+            }
+            if(GetComponent<TheTrippleFood>() != null)
+            {
+                Destroy(GetComponent<TheTrippleFood>());
+            }
+            
+            foreach (var obj in _objectsToDestroy)
+            {
+                if (obj != null)
+                {
+                    Destroy(obj);
+                }
+            }
+            _objectsToDestroy.Clear();
+        }
+
         void FixedUpdate()
         {
+            existTime += Time.fixedDeltaTime;
+            if (existTime >= 20)
+            {
+                GameManager.Instance.CollectItem(this);
+                return;
+            }
             if (!dropCompleted)
             {
                 UsingRaycast();
@@ -315,7 +442,8 @@ namespace Factory
 
         void FreezeConstrain()
         {
-            GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionX;
+            // GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionX;
+            GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
         }
 
         void UnfreezeConstrain()
@@ -336,8 +464,13 @@ namespace Factory
                 {
                     if (hit.collider.CompareTag("Liquid") && !dropCompleted)
                     {
-                        dropCompleted = true;
                         OnDropToSurface?.Invoke();
+                        if (dropCompleted)
+                        {
+                            return;
+                        }
+                        dropCompleted = true;
+                        waterSplashVFX?.Play();
                         // FreezeConstrain();
                     }
                     if (hit.collider.CompareTag("Item") && !isCollected && mergeable)

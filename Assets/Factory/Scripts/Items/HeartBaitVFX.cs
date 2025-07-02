@@ -9,13 +9,13 @@ public class HeartBaitVFX : MonoBehaviour
     [SerializeField]
     private ParticleSystem mainParticle;
 
-    [SerializeField]
-    private ParticleSystem glowParticle;
-
     public void SetRadius(float radius = 2)
     {
-        var main = glowParticle.main;
-        main.startSize = radius * 2;
+        var main = mainParticle.main;
+        main.startSize = radius;
+        var sub = mainParticle.GetComponentsInChildren<ParticleSystem>()[1];
+        var subMain = sub.main;
+        subMain.startLifetime = 0.3f * radius / 2f;
     }
 
     public async Task PlayVFX(Vector3 position, float duration = 1, float radius = 2, int cycle = 1)

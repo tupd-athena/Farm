@@ -7,11 +7,9 @@ Shader "Unlit/AnimateSprite"
         _SwayFlip ("Sway Flip", Range(0,1)) = 0
         _SwayAmount ("Sway Amount", Range(0,0.2)) = 0.05
         _SwaySpeed ("Sway Speed", Range(0,10)) = 2.0
-        [Toggle] _EnableFlash ("Enable Flash", Float) = 0
-        _Flash ("Flash Intensity", Range(0,1)) = 0
-        _LineWidth ("Line Width", Range(0.001,0.1)) = 0.02
-        _LineAngle ("Line Angle", Range(0,360)) = 45
-        _LineSpeed ("Line Speed", Range(0,10)) = 1.0
+        [Toggle] _EnableRainbow ("Enable Shiny Rainbow", Float) = 0
+        _RainbowSpeed ("Rainbow Speed", Range(0,10)) = 2.0
+        _RainbowIntensity ("Rainbow Intensity", Range(0,2)) = 1.0
     }
     SubShader
     {
@@ -49,12 +47,10 @@ Shader "Unlit/AnimateSprite"
             float4 _Color;
             float _SwayAmount;
             float _SwaySpeed;
-            float _Flash;
-            float _LineWidth;
-            float _LineAngle;
-            float _LineSpeed;
-            float _EnableFlash;
             float _SwayFlip;
+            float _EnableRainbow;
+            float _RainbowSpeed;
+            float _RainbowIntensity;
             v2f vert (appdata v)
             {
                 v2f o;
@@ -80,19 +76,41 @@ Shader "Unlit/AnimateSprite"
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv) * _Color;
                 
-                // Calculate line with angle
-                float angleRad = radians(_LineAngle);
-                float2 dir = float2(cos(angleRad), sin(angleRad));
-                float proj = dot(i.uv, dir);
+                // Rainbow effect
+                if (_EnableRainbow > 0.5)
+                {
+                    // Create smoother rainbow colors using improved HSV to RGB conversion
+                    float time = _Time.y * _RainbowSpeed;
+                    float hue = frac(time + i.uv.x * -0.5 + i.uv.y * 0); // Smoother UV distribution
+                    
+                    // Improved HSV to RGB conversion for smoother transitions
+                    float3 rainbow;
+                    hue = hue * 6.0;
+                    float chroma = 1.0;
+                    float x = chroma * (1.0 - abs(fmod(hue, 2.0) - 1.0));
+                    float m = 0.0;
+                    
+                    if (hue >= 0.0 && hue < 1.0) {
+                        rainbow = float3(chroma, x, 0.0);
+                    } else if (hue >= 1.0 && hue < 2.0) {
+                        rainbow = float3(x, chroma, 0.0);
+                    } else if (hue >= 2.0 && hue < 3.0) {
+                        rainbow = float3(0.0, chroma, x);
+                    } else if (hue >= 3.0 && hue < 4.0) {
+                        rainbow = float3(0.0, x, chroma);
+                    } else if (hue >= 4.0 && hue < 5.0) {
+                        rainbow = float3(x, 0.0, chroma);
+                    } else {
+                        rainbow = float3(chroma, 0.0, x);
+                    }
+                    
+                    rainbow += m;
+                    
+                    // Smoother blending with original color
+                    float rainbowMask = col.a; // Use alpha for better blending
+                    col.rgb = lerp(col.rgb, col.rgb + rainbow * _RainbowIntensity * rainbowMask, 0.7);
+                }
                 
-                // Animate line position
-                float linePos = frac(_Time.y * _LineSpeed);
-                
-                // Create line effect
-                float lineEffect = saturate((1.0 - abs(proj - linePos) / _LineWidth) * 10.0);
-                
-                // Add flashing line to the sprite
-                col.rgb += _EnableFlash * lineEffect * _Flash;
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 

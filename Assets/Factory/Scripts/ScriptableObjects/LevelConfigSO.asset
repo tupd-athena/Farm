@@ -21,7 +21,7 @@ MonoBehaviour:
     initialLevelCurrency: 240
     dayConfigurations:
     - dayNumber: 1
-      numberOfFishes: 3
+      numberOfFishes: 4
       fishConfigs:
       - fishType: 0
         amount: 2
@@ -61,6 +61,25 @@ MonoBehaviour:
           size: 1
           depth: -3
           moveArea: 2.5
+      - fishType: 7
+        amount: 1
+        fishConfig:
+          fishType: 7
+          weight: 0
+          fishCurrencyValue: 1
+          patienceValue: 3
+          dropCoinValue: 1
+          percentDecrease: 5
+          timeDecreasePerTick: 0
+          fishPrefabName: Swordfish
+          isBoss: 1
+          sprites:
+          - percentHP: 100
+            sprite: {fileID: 21300000, guid: 185ef8fdbe086428985af004bf85eca4, type: 3}
+          speed: 1
+          size: 1
+          depth: -3
+          moveArea: 2
       initialDayCurrency: 5
       percentOutputCash: 1
       maxInPool: 5

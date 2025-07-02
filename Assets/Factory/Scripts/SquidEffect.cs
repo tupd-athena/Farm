@@ -30,7 +30,7 @@ public class SquidEffect : MonoBehaviour
         CancelInvoke(nameof(MoveAllFishConfused));
         foreach (FishController fishController in fishControllers)
         {
-            if (fishController.state == FishState.Confused)
+            if (fishController!=null && fishController.spriteRenderer != null && fishController.state == FishState.Confused)
             {
                 fishController.state = FishState.Moving;
                 fishController.spriteRenderer.material.DOComplete();

@@ -50,6 +50,11 @@ namespace Factory
         [SerializeField]
         private List<ShopItem> _shopItems = new List<ShopItem>();
 
+        [SerializeField]
+        private GameObject _artifactPopup;
+
+        public List<ArtifactController> Artifacts;
+
 
         public Button StartButton => _startButton;
 
@@ -152,6 +157,24 @@ namespace Factory
         {
             _shopPopup.SetActive(false);
             _recycleBin.gameObject.SetActive(false);
+        }
+
+        public void ShowArtifactPopup(List<ArtifactData> datas)
+        {
+            Artifacts.ForEach(button => button.gameObject.SetActive(false));
+            for (int i = 0; i < datas.Count; i++)
+            {
+                if (i < Artifacts.Count)
+                {
+                    Artifacts[i].gameObject.SetActive(true);
+                    Artifacts[i].Initialize(datas[i]);
+                }
+            }
+            _artifactPopup.SetActive(true);
+        }
+        public void HideArtifactPopup()
+        {
+            _artifactPopup.SetActive(false);
         }
 
         public void UpdateDay()

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -12,6 +13,8 @@ namespace Factory
     {
         [SerializeField]
         protected Image _gearIcon;
+
+        public List<Sprite> _textGearIconsPerLevel = new List<Sprite>();
 
         [SerializeField]
         protected Image _gearItemIcon;
@@ -30,9 +33,6 @@ namespace Factory
 
         [SerializeField]
         protected Sprite _gear6ForItemIcon;
-
-        [SerializeField]
-        protected Sprite _gear6ForTextIcon;
 
         public Vector2 gridCoordinate;
 
@@ -119,6 +119,7 @@ namespace Factory
                 return;
             }
             gearData.Copy(data);
+            SetSizeDeltaIcon();
             if (gearData.gearTypes.Contains(GearType.Text))
             {
                 _levelText.gameObject.SetActive(true);
@@ -144,6 +145,11 @@ namespace Factory
             }
             AddSpecialGear(data);
             _originalScale = transform.localScale;
+        }
+
+        public void SetSizeDeltaIcon()
+        {
+            _gearItemIcon.rectTransform.sizeDelta = new Vector2(gearData.size, gearData.size);
         }
 
         public void SetTextGear()
@@ -214,14 +220,19 @@ namespace Factory
 
         public void SetGear(List<GearType> gearTypes)
         {
-            if (gearTypes.Contains(GearType.HeadGear))
+            if (gearTypes.Contains(GearType.HeadGear) || isHead)
             {
                 _gearIcon.sprite = _gear1;
                 return;
             }
-            _gearIcon.sprite = gearTypes.Contains(GearType.Text)
-                ? _gear6ForTextIcon
-                : _gear6ForItemIcon;
+            if (gearTypes.Contains(GearType.Text))
+            {
+                UpdateGearIconLevel();
+            }
+            else if (gearTypes.Contains(GearType.Image))
+            {
+                _gearIcon.sprite = gearData.gearBaseColor.sprite;
+            }
         }
 
         public void Connect(GearController gear, int direction)
@@ -252,10 +263,23 @@ namespace Factory
             {
                 ease = Ease.InSine;
             }
-            float multiplier = CustomValueManager.Instance.GetCustomValueInGame(
-                CustomValueManager.MULTIPLIER_HEAD_GEAR
+            float multiplier = 1;
+            float multiplierBySpeedUp = CustomValueManager.Instance.GetCustomValueInGame(
+                CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SPEEDUP
             );
-            multiplier = multiplier == 0 ? 1 : multiplier;
+            multiplierBySpeedUp = multiplierBySpeedUp == 0 ? 1 : multiplierBySpeedUp;
+            float multiplierByScaredTotem = CustomValueManager.Instance.GetCustomValueInGame(
+                CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SCARED_TOTEM
+            );
+            if (multiplierBySpeedUp > 1)
+            {
+                GetComponent<GearEffectComponent>().PlayEffect("Electric");
+            }
+            else
+            {
+                GetComponent<GearEffectComponent>().StopEffect("Electric");
+            }
+            multiplier = multiplierBySpeedUp + multiplierByScaredTotem;
             _gearIcon
                 .transform.DORotate(
                     new Vector3(0, 0, angle * ((direction + 1) % 4)),
@@ -267,6 +291,36 @@ namespace Factory
                     Rotate();
                     NeighborRotate();
                 });
+        }
+
+        public void UpdateGearIconLevel()
+        {
+            if (gearData == null)
+            {
+                _gearIcon.sprite = GameManager.Instance.GetGearBaseColorSprite(
+                    GearBaseColorType.TEXT1
+                );
+                Debug.LogWarning("Gear data is null or not enough icons for levels.");
+                return;
+            }
+            switch (gearData.level)
+            {
+                case 1:
+                    _gearIcon.sprite = GameManager.Instance.GetGearBaseColorSprite(
+                        GearBaseColorType.TEXT1
+                    );
+                    break;
+                case 2:
+                    _gearIcon.sprite = GameManager.Instance.GetGearBaseColorSprite(
+                        GearBaseColorType.TEXT2
+                    );
+                    break;
+                default:
+                    _gearIcon.sprite = GameManager.Instance.GetGearBaseColorSprite(
+                        GearBaseColorType.TEXT3
+                    );
+                    break;
+            }
         }
 
         public virtual void Rotate(float angle, float Amplifier, float Multiplier)
@@ -417,7 +471,6 @@ namespace Factory
                 || GameManager.Instance.GameState.CurrentState == GameStateType.Main
             )
                 return;
-
 
             var parent = isInShop
                 ? GameManager.Instance.TempContainerUI.transform

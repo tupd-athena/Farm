@@ -30,7 +30,7 @@ public class SpeedUpGear : MonoBehaviour
         _coolDown = 0;
         _coolDownMax = gearController.gearData.customValues.Find(x => x.id == "coolDown").customValue;
         CustomValueManager.Instance.AddCustomValueInGame(
-            CustomValueManager.MULTIPLIER_HEAD_GEAR,
+            CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SPEEDUP,
             gearController.gearData.customValues.Find(x => x.id == "multiplier").customValue
         );
         gearController.isNotAddTickValue = true;
@@ -54,7 +54,7 @@ public class SpeedUpGear : MonoBehaviour
             {
                 gearController.FillItemIcon(0);
                 CustomValueManager.Instance.RemoveCustomValueInGame(
-                    CustomValueManager.MULTIPLIER_HEAD_GEAR,
+                    CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SPEEDUP,
                     gearController.gearData.customValues.Find(x => x.id == "multiplier").customValue
                 );
                 gearController.isNotAddTickValue = false;

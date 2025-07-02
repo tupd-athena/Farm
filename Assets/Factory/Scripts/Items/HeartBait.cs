@@ -12,7 +12,7 @@ public class HeartBait : MonoBehaviour
 
     public async Task Active()
     {
-        await Task.Delay(2000);
+        // await Task.Delay(2000);
         System.Random random = new System.Random();
         Debug.Log("Active");
         itemController.canCollect = false;
@@ -30,9 +30,10 @@ public class HeartBait : MonoBehaviour
         var depth = gearData.customValues.FirstOrDefault(v => v.id == "depth").customValue;
         var duration = gearData.customValues.FirstOrDefault(v => v.id == "duration").customValue;
         depth += random.Next(-10, 10) * 0.01f;
-        await itemController
-            .transform.DOLocalMoveY(depth, 1f / itemController.itemData.dropSpeed)
-            .AsyncWaitForCompletion();
+        float speed = 0.3f / itemController.itemData.dropSpeed;
+        itemController
+            .transform.DOLocalMoveY(depth, speed);
+        await Task.Delay((int)(speed * random.Next(500, 800)));
         await Explode(radius, duration);
     }
 
@@ -48,6 +49,7 @@ public class HeartBait : MonoBehaviour
         vfx.SetActive(true);
         var heartBaitVFX = vfx.GetComponent<HeartBaitVFX>();
         heartBaitVFX.PlayVFX(transform.localPosition, duration, radius, 1);
+        itemController.transform.DOScale(Vector3.zero, 0.3f);
         await Task.Delay((int)(duration * 200));
         var colliders = Physics2D.OverlapCircleAll(transform.position, radius);
         foreach (var collider in colliders)
@@ -55,6 +57,7 @@ public class HeartBait : MonoBehaviour
             if (collider.CompareTag("Fish"))
             {
                 collider.GetComponent<FishController>().Eat(itemController);
+                collider.GetComponent<FishController>().heartVFX.Play();
             }
         }
         GameManager.Instance.CollectItem(itemController);

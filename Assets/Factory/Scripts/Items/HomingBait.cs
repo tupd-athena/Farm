@@ -11,6 +11,11 @@ public class HomingBait : MonoBehaviour
     public ItemController itemController;
     public FishController targetFish;
 
+    void OnDisable()
+    {
+        Destroy(this);
+    }
+
     public async Task Active()
     {
         System.Random random = new System.Random();
@@ -19,19 +24,16 @@ public class HomingBait : MonoBehaviour
         itemController.rb.velocity = Vector2.zero;
         GetComponent<Collider2D>().isTrigger = true;
         targetFish = null;
-        // Kill any existing move tween
-        itemController.moveTween?.Kill();
-        transform.localEulerAngles = new Vector3(40, 0, 0);
-        transform
-            .DOLocalRotate(new Vector3(40, 0, random.Next(-30, 30)), 1f)
-            .SetLoops(-1, LoopType.Yoyo);
-        var y = random.Next(-75, -65) * 0.1f;
-        var x = random.Next(-35, 35) * 0.1f;
-        transform.localPosition = new Vector3(x, y, 0);
-        transform.localScale = new Vector3(0, 0, 0);
-        await transform.DOScale(new Vector3(1, 1, 1), 0.5f).AsyncWaitForCompletion();
-        await Task.Delay(random.Next(500, 2000));
+        await transform
+            .DOMoveY(
+                GameManager.Instance.GetBottomYWithOffset() + random.Next(0, 10) * 0.1f,
+                5f / itemController.itemData.dropSpeed
+            ).SetEase(Ease.InCubic)
+            .AsyncWaitForCompletion();
+        GetComponentInChildren<Animator>().Play("Pudding");
+        await Task.Delay(500);
         FindTarget();
+
     }
 
     public void FindTarget()
@@ -50,7 +52,7 @@ public class HomingBait : MonoBehaviour
 
     private async Task MoveToFish(FishController fish)
     {
-        if(fish == null)
+        if (fish == null)
         {
             Debug.LogError("Fish is null, cannot move to fish");
             FindTarget();
@@ -58,16 +60,12 @@ public class HomingBait : MonoBehaviour
         }
         try
         {
+            Debug.Log("haha0");
             transform.DOKill();
-            await transform
-                .DOLocalRotate(new Vector3(0, 0, 180), 1f, RotateMode.LocalAxisAdd)
-                .SetEase(Ease.InExpo)
-                .AsyncWaitForCompletion();
-
             transform.DOScale(0, 0.3f).SetEase(Ease.InExpo);
-
             targetFish = fish;
-            var particle = PoolSystem.Instance.GetObject("HomingBait");
+            var particle = Instantiate(Resources.Load("Prefabs/HomingVFX") as GameObject);
+            Debug.Log("haha1");
             if (particle == null)
             {
                 Debug.LogError("HomingBait particle not found in pool");
@@ -75,7 +73,11 @@ public class HomingBait : MonoBehaviour
             }
             particle.transform.SetParent(GameManager.Instance.TempContainerUI.transform);
             particle.transform.position = transform.position;
-            var attractor = PoolSystem.Instance.GetObject("Attractor");
+            GameObject attractor = Instantiate(
+                Resources.Load("Prefabs/ParticleAttractor") as GameObject,
+                GameManager.Instance.TempContainerUI.transform
+            );
+            Debug.Log("haha2");
             if (attractor == null)
             {
                 Debug.LogError("Attractor not found in pool");
@@ -86,13 +88,16 @@ public class HomingBait : MonoBehaviour
             attractorComponent.transform.localPosition = Vector3.zero;
             attractorComponent.AddParticleSystem(particle.GetComponentInChildren<ParticleSystem>());
             attractorComponent.movement = UIParticleAttractor.Movement.Sphere;
-            attractorComponent.maxSpeed = 0f;
+            attractorComponent.maxSpeed = 0.2f;
             attractorComponent.onAttracted.RemoveAllListeners();
+            Debug.Log("haha3");
             attractorComponent.onAttracted.AddListener(() =>
             {
                 if (targetFish != null)
                 {
-                    targetFish.Eat(itemController);
+                    Debug.Log("Target fish found, eating item");
+                    targetFish.Eat(itemController, false);
+                    targetFish.cloverVFX.Play();
                 }
                 else
                 {
@@ -101,14 +106,14 @@ public class HomingBait : MonoBehaviour
             });
             particle.SetActive(true);
             particle.GetComponentInChildren<ParticleSystem>().Play();
-            await Task.Delay(500);
-            attractorComponent.maxSpeed = .2f;
+            Debug.Log("haha4");
             await Task.Delay(2000);
             attractorComponent.RemoveParticleSystem(
                 particle.GetComponentInChildren<ParticleSystem>()
             );
-            PoolSystem.Instance.ReturnObject(attractor, "Attractor");
-            PoolSystem.Instance.ReturnObject(particle, "HomingBait");
+            Debug.Log("haha5");
+            Destroy(particle);
+            GameManager.Instance.CollectItem(itemController);
         }
         catch (System.Exception e)
         {

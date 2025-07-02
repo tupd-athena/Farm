@@ -125,3 +125,19 @@ MonoBehaviour:
     size: 1
     depth: -3
     moveArea: 2
+  - fishType: 7
+    weight: 0
+    fishCurrencyValue: 0
+    patienceValue: 3
+    dropCoinValue: 0
+    percentDecrease: 30
+    timeDecreasePerTick: 0
+    fishPrefabName: Swordfish
+    isBoss: 1
+    sprites:
+    - percentHP: 100
+      sprite: {fileID: 21300000, guid: f656151c4167648bb8c8fab34da1f04a, type: 3}
+    speed: 1
+    size: 1
+    depth: -3
+    moveArea: 2

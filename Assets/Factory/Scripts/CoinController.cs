@@ -17,11 +17,12 @@ namespace Factory
             canvas.worldCamera = GameManager.Instance.mainCamera;
         }
 
-        public void OnEnable()
+        public void Active()
         {
             isCollected = false;
             transform.DOComplete();
-            transform.DOLocalMoveY(-5.7f, 1f).SetEase(Ease.InSine);
+            transform.DOLocalMoveY(GameManager.Instance.GetBottomYWithOffset(), 1f).SetEase(Ease.InSine);
+            transform.DOLocalMoveX(transform.localPosition.x + Random.Range(-0.3f, 0.3f), 2f);
             if (isCollected || gameObject.activeSelf == false)
                 return;
             CancelInvoke("OnClick");
@@ -40,6 +41,10 @@ namespace Factory
                 .SetEase(Ease.OutSine)
                 .OnComplete(() =>
                 {
+                    value += (int)
+                        CustomValueManager.Instance.GetCustomValueInGame(
+                            CustomValueManager.FISH_GOLD_BONUS
+                        );
                     FishManager.Instance.SpawnTextFloating(value.ToString(), transform.position);
                     GameManager.Instance.AddGold(value);
                     PoolSystem.Instance.ReturnObject(gameObject, "Coin");

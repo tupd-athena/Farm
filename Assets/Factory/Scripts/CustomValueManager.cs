@@ -9,7 +9,12 @@ public class CustomValueManager : MonoBehaviour
     public List<CustomValueInGame> customValuesInGame = new List<CustomValueInGame>();
     public const string ADD_TICK_VALUE = "addTickValue";
     public const string MULTIPLIER_TICK_VALUE = "multiplierTickValue";
-    public const string MULTIPLIER_HEAD_GEAR = "multiplierHeadGear";
+    public const string MULTIPLIER_HEAD_GEAR_BY_SPEEDUP = "multiplierHeadGearBySpeedup";
+    public const string MULTIPLIER_HEAD_GEAR_BY_SCARED_TOTEM = "multiplierHeadGearByScaredTotem";
+    public const string REDUCE_FISH_TICK_RATE = "reduceFishTickRate";
+    public const string FISH_GOLD_BONUS = "fishGoldBonus";
+    public const string HEART_BONUS = "heartBonus";
+
 
     [SerializeField, ReadOnly]
     private List<string> specialTextGear = new List<string>() { "Multiplier", "SpeedUP" };

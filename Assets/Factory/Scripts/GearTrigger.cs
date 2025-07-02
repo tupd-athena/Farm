@@ -25,7 +25,7 @@ public class GearTrigger : MonoBehaviour, IDropHandler
         )
             return;
 
-        if (CanMergeAmplifierGears(droppedGear))
+        if (CanMergeAmplifierGears(droppedGear) && gearController.gearData.level < 4 && droppedGear != gearController)
         {
             if (droppedGear.isInShop)
             {
@@ -80,14 +80,18 @@ public class GearTrigger : MonoBehaviour, IDropHandler
         return gearController.gearData != null
             && otherGear.gearData.id == gearController.gearData.id
             && gearController.gearData.id == 0
-            && otherGear.gearData.level == gearController.gearData.level;
+            && otherGear.gearData.level == gearController.gearData.level
+            && otherGear.gearData.gearTypes.Contains(GearType.Text)
+            && otherGear != gearController;
     }
 
     protected void MergeAmplifierGears(GearController otherGear)
     {
+        Debug.Log("MergeAmplifierGears");
         gearController.gearData.level++;
         gearController.LevelText.text = gearController.gearData.level.ToString();
         otherGear.Hide();
+        gearController.UpdateGearIconLevel();
     }
 
     protected void SwapGears(GearController otherGear)
@@ -106,6 +110,7 @@ public class GearTrigger : MonoBehaviour, IDropHandler
 
     protected void TransferGear(GearController otherGear)
     {
+        Debug.Log("TransferGear");
         gearController.SetGearData(otherGear.gearData);
         gearController.SetItemData(otherGear.gearData);
         gearController.Show();

@@ -55,6 +55,7 @@ namespace Factory
                     {
                         GameManager.Instance.homeUI.gameObject.SetActive(true);
                         GameManager.Instance.homeUI.HideShopPopup();
+                        GameManager.Instance.homeUI.HideArtifactPopup();
                         FishManager.Instance.isFishClosing = false;
                         FishManager.Instance.OpenGate();
                         GameManager.Instance.isStop = false;

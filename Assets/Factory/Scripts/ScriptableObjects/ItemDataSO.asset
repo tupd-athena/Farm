@@ -46,7 +46,7 @@ MonoBehaviour:
   - itemId: 3
     gearId: 7
     itemName: HomingBait
-    iconName: clover_1
+    iconName: SpecialGears/F5_1
     cost: 0.15
     size: 1.5
     dropType: 0
@@ -56,10 +56,40 @@ MonoBehaviour:
   - itemId: 4
     gearId: 8
     itemName: HeartBait
-    iconName: heart
+    iconName: SpecialGears/B1_1
     cost: 0.8
-    size: 1
+    size: 1.5
     dropType: 1
     dropSpeed: 0.3
+    isCustom: 0
+    mergeableItems: []
+  - itemId: 5
+    gearId: 9
+    itemName: TheTwin
+    iconName: F4_1
+    cost: 0.8
+    size: 1.5
+    dropType: 1
+    dropSpeed: 0.3
+    isCustom: 0
+    mergeableItems: []
+  - itemId: 6
+    gearId: 10
+    itemName: TheTripple
+    iconName: F5
+    cost: 0.8
+    size: 1.5
+    dropType: 1
+    dropSpeed: 0.3
+    isCustom: 0
+    mergeableItems: []
+  - itemId: 7
+    gearId: 10
+    itemName: TheTripple_Sub
+    iconName: F5_1
+    cost: 0.8
+    size: 1.5
+    dropType: 1
+    dropSpeed: 0.7
     isCustom: 0
     mergeableItems: []

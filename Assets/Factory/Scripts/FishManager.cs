@@ -32,10 +32,13 @@ namespace Factory
 
         public int indexFish = 0;
 
+        public System.Action<FishController> OnFishFull;
+
         void Awake()
         {
             Instance = this;
             _waterMaterial.SetColor("_Color", new Color(0, 1, 0.979797f, 1f));
+            OnFishFull = null;
         }
 
         void Start()
@@ -181,7 +184,7 @@ namespace Factory
 
         public async Task UpdateFishCountText(int count)
         {
-            Debug.Log("UpdateFishCountText: " + count);
+            // Debug.Log("UpdateFishCountText: " + count);
             GameManager.Instance.homeUI.UpdateTotalFishText(count);
             if (count <= 2)
             {
@@ -206,6 +209,10 @@ namespace Factory
                 await Task.Delay(3000);
                 await UpdateFishCountText(
                     GameManager.Instance.GetCurrentDayConfig().maxInPool
+                        + (int)
+                            CustomValueManager.Instance.GetCustomValueInGame(
+                                CustomValueManager.HEART_BONUS
+                            )
                         - _fishes.FindAll(x => x.state == FishState.Dead).Count
                 );
             }
@@ -275,6 +282,10 @@ namespace Factory
         {
             UpdateFishCountText(
                 GameManager.Instance.GetCurrentDayConfig().maxInPool
+                    + (int)
+                        CustomValueManager.Instance.GetCustomValueInGame(
+                            CustomValueManager.HEART_BONUS
+                        )
                     - _fishes.FindAll(x => x.state == FishState.Dead && !x.fishConfig.isBoss).Count
             );
             if (
@@ -309,7 +320,13 @@ namespace Factory
             GameManager.Instance.homeUI.NotReadyFishAmountText.text = (
                 this.totalFish - _fishes.Count
             ).ToString();
-            UpdateFishCountText(GameManager.Instance.GetCurrentDayConfig().maxInPool);
+            UpdateFishCountText(
+                GameManager.Instance.GetCurrentDayConfig().maxInPool
+                    + (int)
+                        CustomValueManager.Instance.GetCustomValueInGame(
+                            CustomValueManager.HEART_BONUS
+                        )
+            );
         }
 
         public void UseDopamine(GearData gearData)

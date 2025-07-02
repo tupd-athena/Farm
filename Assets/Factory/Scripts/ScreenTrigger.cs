@@ -46,11 +46,14 @@ public class ScreenTrigger : MonoBehaviour
 
     private void HandleInputPosition(Vector2 screenPosition)
     {
-        if (_canvasRect == null || _uiCamera == null) return;
+        if (_canvasRect == null || _uiCamera == null)
+            return;
 
         // Convert screen position to world position
-        Vector3 worldPosition = _uiCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, _uiCamera.nearClipPlane));
-        
+        Vector3 worldPosition = _uiCamera.ScreenToWorldPoint(
+            new Vector3(screenPosition.x, screenPosition.y, _uiCamera.nearClipPlane)
+        );
+
         // Convert world position to local position in canvas
         Vector2 localPoint;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -66,7 +69,8 @@ public class ScreenTrigger : MonoBehaviour
     public void SpawnParticle(Vector2 localPosition)
     {
         var particle = GetObject();
-        if (particle == null) return;
+        if (particle == null)
+            return;
 
         // Validate position is within screen bounds
         if (localPosition.y < Screen.height / 2f)
