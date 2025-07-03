@@ -14,6 +14,10 @@ public class SpeedUpGear : MonoBehaviour
     public void Start()
     {
         gearController = GetComponent<GearController>();
+        if(gearController == null || gearController.isInShop)
+        {
+            return;
+        }
         gearController.OnFillComplete += SetCoolDown;
         gearController.OnDestroy += Destroy;
     }

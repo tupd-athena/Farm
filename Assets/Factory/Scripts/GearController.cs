@@ -201,6 +201,10 @@ namespace Factory
 
         public void AddSpecialGear(GearData data)
         {
+            if(isInShop)
+            {
+                return;
+            }
             DisableAllSpecialComponets();
             switch (data.itemName)
             {

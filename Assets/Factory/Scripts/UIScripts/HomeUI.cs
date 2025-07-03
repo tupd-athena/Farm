@@ -11,7 +11,6 @@ namespace Factory
 {
     public class HomeUI : UIController
     {
-
         [SerializeField]
         private GameObject _shopPopup;
 
@@ -44,6 +43,7 @@ namespace Factory
 
         [SerializeField]
         private Image _warningEffect;
+
         [SerializeField]
         private Transform _boardTempContainer;
 
@@ -58,11 +58,9 @@ namespace Factory
         public RectTransform indicatorLeft;
         public RectTransform indicatorRight;
 
-
         public Button StartButton => _startButton;
 
         public List<ShopItem> ShopItems => _shopItems;
-
 
         public RectTransform GameStartPanel;
         public TMP_Text GameStartLevelText;
@@ -133,11 +131,15 @@ namespace Factory
         {
             if (GameManager.Instance.GameState.CurrentState == GameStateType.Main)
             {
-                GameManager.Instance.GearItemContainer.GetComponent<RectTransform>().DOAnchorPosY(-500, 0.5f);
+                GameManager
+                    .Instance.GearItemContainer.GetComponent<RectTransform>()
+                    .DOAnchorPosY(-500, 0.5f);
             }
             if (GameManager.Instance.GameState.CurrentState == GameStateType.Shop)
             {
-                GameManager.Instance.GearItemContainer.GetComponent<RectTransform>().DOAnchorPosY(-550, 0.5f);
+                GameManager
+                    .Instance.GearItemContainer.GetComponent<RectTransform>()
+                    .DOAnchorPosY(-550, 0.5f);
             }
         }
 
@@ -175,6 +177,7 @@ namespace Factory
             }
             _artifactPopup.SetActive(true);
         }
+
         public void HideArtifactPopup()
         {
             _artifactPopup.SetActive(false);
@@ -188,18 +191,12 @@ namespace Factory
 
         public void UpdateWaveText()
         {
-            _waveText.text =
-                "Wave "
-                + (GameManager.Instance.currentDay + 1)
-                + "/"
-                + GameManager.Instance.GetCurrentLevelConfig().dayConfigurations.Count;
+            _waveText.text = "Wave " + (GameManager.Instance.currentDay + 1);
         }
 
         public void UpdateLevelProgressSlider()
         {
-            _levelProgressSlider.value =
-                (GameManager.Instance.currentDay + 1)
-                / (float)GameManager.Instance.GetCurrentLevelConfig().dayConfigurations.Count;
+            _levelProgressSlider.value = (GameManager.Instance.currentDay + 1) % 10 / 10f;
         }
 
         public async Task ShowGameStartPanel()

@@ -208,7 +208,7 @@ namespace Factory
                     .SetLoops(4, LoopType.Yoyo);
                 await Task.Delay(3000);
                 await UpdateFishCountText(
-                    GameManager.Instance.GetCurrentDayConfig().maxInPool
+                    GameManager.Instance.dayConfiguration.maxInPool
                         + (int)
                             CustomValueManager.Instance.GetCustomValueInGame(
                                 CustomValueManager.HEART_BONUS
@@ -281,7 +281,7 @@ namespace Factory
         public void CheckWinLose()
         {
             UpdateFishCountText(
-                GameManager.Instance.GetCurrentDayConfig().maxInPool
+                GameManager.Instance.dayConfiguration.maxInPool
                     + (int)
                         CustomValueManager.Instance.GetCustomValueInGame(
                             CustomValueManager.HEART_BONUS
@@ -290,7 +290,7 @@ namespace Factory
             );
             if (
                 _fishes.FindAll(x => x.state == FishState.Dead).Count
-                >= GameManager.Instance.GetCurrentDayConfig().maxInPool
+                >= GameManager.Instance.dayConfiguration.maxInPool
             )
             {
                 Debug.Log("Lose");
@@ -321,7 +321,7 @@ namespace Factory
                 this.totalFish - _fishes.Count
             ).ToString();
             UpdateFishCountText(
-                GameManager.Instance.GetCurrentDayConfig().maxInPool
+                GameManager.Instance.dayConfiguration.maxInPool
                     + (int)
                         CustomValueManager.Instance.GetCustomValueInGame(
                             CustomValueManager.HEART_BONUS

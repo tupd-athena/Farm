@@ -75,6 +75,8 @@ namespace Factory
 
         public Tween airPumpTween;
 
+        public DayConfiguration dayConfiguration;
+
         public float GetBottomYWithOffset(float offset = 0.1f)
         {
             return bottom.position.y + offset;
@@ -123,7 +125,7 @@ namespace Factory
             }
             homeUI.StartButton.onClick.AddListener(StartGame);
             // _circle.rotation = new Vector3(0, 0, _circleSpeed);
-            LoadLevel(0);
+            NewGame();
         }
 
         public void ResetArtifactTweens()
@@ -133,19 +135,18 @@ namespace Factory
             CancelInvoke(nameof(SpawnPearl));
         }
 
-        public async Task LoadLevel(int level)
+        public async Task NewGame()
         {
             OnGameStart = null;
             _isFirstOpenShop = false;
             isStop = true;
-            currentLevel = level;
             _currentLevelConfig = GetCurrentLevelConfig();
+            dayConfiguration = GetDayConfig();
             currentDay = 0;
             _gold = 0;
             CustomValueManager.Instance.ClearCustomValueInGame();
-            Debug.Log($"LoadLevel {level}");
             InitGears(_currentLevelConfig.gridSize);
-            InitBoxes(GetCurrentDayConfig().fishConfigs);
+            InitFishes(dayConfiguration.fishConfigs);
             UpdateGold(_gold + _currentLevelConfig.initialLevelCurrency);
             artifacts.ForEach(a => a.SetActive(false));
             // homeUI.HideArtifactPopup();
@@ -157,29 +158,57 @@ namespace Factory
 
         public LevelConfiguration GetCurrentLevelConfig()
         {
-            if (currentLevel < 0 || currentLevel >= _levelConfigSO.levelConfigs.Count)
-            {
-                return null;
-            }
-            return _levelConfigSO.levelConfigs[currentLevel];
+            return _levelConfigSO.levelConfigs[0];
         }
 
-        public DayConfiguration GetCurrentDayConfig()
+        public DayConfiguration GetDayConfig()
         {
-            int dayNumber = currentDay;
-            if (
-                _currentLevelConfig == null
-                || _currentLevelConfig.dayConfigurations == null
-                || dayNumber < 0
-                || dayNumber >= _currentLevelConfig.dayConfigurations.Count
-            )
+            System.Random random = new System.Random();
+            DayConfiguration dayConfig = null;
+            if (currentDay % 10 != 5 && currentDay % 10 != 0 || currentDay == 0)
             {
-                return null;
+                dayConfig = _levelConfigSO.GetDayConfig(
+                    _levelConfigSO.normalDayConfigurations[
+                        random.Next(0, _levelConfigSO.normalDayConfigurations.Count)
+                    ],
+                    GetMaxTotalFishHP(),
+                    GetMaxCoinDrop()
+                );
             }
-            return _currentLevelConfig.dayConfigurations[dayNumber];
+            else if (currentDay % 10 == 5)
+            {
+                dayConfig = _levelConfigSO.GetDayConfig(
+                    _levelConfigSO.bossDayConfigurations[
+                        random.Next(0, _levelConfigSO.bossDayConfigurations.Count)
+                    ],
+                    GetMaxTotalFishHP(),
+                    GetMaxCoinDrop()
+                );
+            }
+            else if (currentDay % 10 == 0 && currentDay != 0)
+            {
+                dayConfig = _levelConfigSO.GetDayConfig(
+                    _levelConfigSO.specialDayConfigurations[
+                        random.Next(0, _levelConfigSO.specialDayConfigurations.Count)
+                    ],
+                    GetMaxTotalFishHP(),
+                    GetMaxCoinDrop()
+                );
+            }
+            return dayConfig;
         }
 
-        public void InitBoxes(List<FishConfigDay> fishConfigs)
+        public long GetMaxTotalFishHP()
+        {
+            return _currentLevelConfig.maxTotalFishHP * (long)Mathf.Pow(1.05f, currentDay);
+        }
+
+        public int GetMaxCoinDrop()
+        {
+            return (int)(_currentLevelConfig.maxCoinDrop * (float)Mathf.Pow(1.05f, currentDay));
+        }
+
+        public void InitFishes(List<FishConfigDay> fishConfigs)
         {
             FishManager.Instance.Init(fishConfigs);
         }
@@ -191,50 +220,16 @@ namespace Factory
             CancelInvoke(nameof(SpawnPearl));
             ClearItems();
             currentDay++;
+            dayConfiguration = GetDayConfig();
             Debug.Log($"NextDay {currentDay}");
             isStop = true;
-            if (GetCurrentDayConfig() == null)
-            {
-                await ShowWinPanel();
-                return;
-            }
-            _currentLevelConfig = GetCurrentLevelConfig();
+            _currentLevelConfig.maxTotalFishHP =
+                _currentLevelConfig.maxTotalFishHP * (1 + (long)Mathf.Pow(0.05f, currentDay));
             await homeUI.ShowGameStartPanel();
-            InitBoxes(GetCurrentDayConfig().fishConfigs);
-            UpdateGold(_gold + GetCurrentDayConfig().initialDayCurrency);
+            InitFishes(dayConfiguration.fishConfigs);
             Debug.Log($"UpdateGold + {_currentLevelConfig.initialLevelCurrency}");
             homeUI.UpdateDay();
             ChangeGameState(GameStateType.Shop);
-        }
-
-        public async Task NextLevel()
-        {
-            await Task.Delay(1000);
-            await FishManager.Instance.ClearFishes();
-            CancelInvoke(nameof(SpawnPearl));
-            isStop = true;
-            currentLevel++;
-            Debug.Log($"NextLevel {currentLevel}");
-            if (GetCurrentLevelConfig() == null)
-            {
-                currentLevel = 1;
-            }
-            currentDay = 0;
-            ClearAllGears();
-            ClearItems();
-            await LoadLevel(currentLevel);
-        }
-
-        public async Task ShowWinPanel()
-        {
-            await Task.Delay(1000);
-            await FishManager.Instance.ClearFishes();
-            CancelInvoke(nameof(SpawnPearl));
-            isStop = true;
-            Debug.Log($"ShowWinPanel");
-            await homeUI.ShowWinPanel();
-            await NextLevel();
-            await Task.Delay(2000);
         }
 
         public async Task ShowLosePanel()
@@ -248,7 +243,7 @@ namespace Factory
             currentDay = 0;
             ClearAllGears();
             ClearItems();
-            LoadLevel(currentLevel);
+            NewGame();
         }
 
         public void StartGame()
@@ -256,7 +251,7 @@ namespace Factory
             ChangeGameState(GameStateType.Main);
             CancelInvoke(nameof(SpawnPearl));
             OnGameStart?.Invoke();
-            FishManager.Instance.SpawnFish(GameManager.Instance.GetCurrentDayConfig().fishConfigs);
+            FishManager.Instance.SpawnFish(dayConfiguration.fishConfigs);
             // ActivateAllHeadGears();
         }
 
@@ -778,7 +773,7 @@ namespace Factory
                         artifactData.GetValueByName("value")
                     );
                     FishManager.Instance.UpdateFishCountText(
-                        GameManager.Instance.GetCurrentDayConfig().maxInPool
+                        dayConfiguration.maxInPool
                             + (int)
                                 CustomValueManager.Instance.GetCustomValueInGame(
                                     CustomValueManager.HEART_BONUS
@@ -910,11 +905,10 @@ namespace Factory
             float multiplierBySpeedUp = CustomValueManager.Instance.GetCustomValueInGame(
                 CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SPEEDUP
             );
-            multiplierBySpeedUp = multiplierBySpeedUp == 0 ? 1 : multiplierBySpeedUp;
             float multiplierByScaredTotem = CustomValueManager.Instance.GetCustomValueInGame(
                 CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SCARED_TOTEM
             );
-            multiplier = multiplierBySpeedUp + multiplierByScaredTotem;
+            multiplier += multiplierBySpeedUp + multiplierByScaredTotem;
             headGearSpeed = 0.5f / multiplier / 4f;
             List<GearController> headGears = _gearControllers.FindAll(g => g.isHead);
             foreach (var headGear in headGears)
@@ -924,11 +918,16 @@ namespace Factory
                     var listGear = connectedGear.gear.FindAllConnectedGearsOnBoard();
                     foreach (var gear in listGear)
                     {
-                        if (gear.isHead)
+                        if (
+                            gear.isHead
+                            || gear.gearData == null
+                            || gear.gearData.gearTypes.Contains(GearType.Text)
+                        )
                         {
                             continue;
                         }
-                        gear.currentSpeed += gear.gearData.tickValue * headGearSpeed / gear.gearData.maxValue;
+                        gear.currentSpeed +=
+                            gear.gearData.tickValue * headGearSpeed / gear.gearData.maxValue;
                     }
                 }
             }
