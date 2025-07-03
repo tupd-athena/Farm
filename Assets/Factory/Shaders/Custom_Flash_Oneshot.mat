@@ -32,12 +32,12 @@ Material:
     - _FlashIntensity: 2
     - _FlashPosition: 0.18
     - _FlashSpeed: 0.42
-    - _LineAngle: 5
-    - _LineCount: 5
+    - _LineAngle: 3
+    - _LineCount: 1
     - _LineSpacing: 0.345
-    - _LineWidth: 0.092
+    - _LineWidth: 0.192
     - _UseUIAlphaClip: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _FlashColor: {r: 0.740566, g: 0.9422814, b: 1, a: 1}
+    - _FlashColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
