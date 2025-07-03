@@ -12,6 +12,11 @@ public class SwordfishController : FishController
     public int SwordfishState = 0;
 
     public float range = 10f;
+    public bool canAttack = false;
+    public bool showVFX = true;
+
+    public Transform vfx;
+    public Transform vfxFlip;
 
     // List to track fishes that have been attacked by this swordfish
     private List<FishController> attackedFishes = new List<FishController>();
@@ -46,6 +51,36 @@ public class SwordfishController : FishController
 
     public override void Update()
     {
+        //Check gameObject is out of screen
+        Vector3 screenPosition = Camera.main.WorldToViewportPoint(transform.position);
+        if (screenPosition.x < -0.2f)
+        {
+            GameManager.Instance.homeUI.indicatorLeft.gameObject.SetActive(true);
+            GameManager.Instance.homeUI.indicatorLeft.transform.position = new Vector3(
+                GameManager.Instance.homeUI.indicatorLeft.transform.position.x,
+                transform.position.y,
+                GameManager.Instance.homeUI.indicatorLeft.transform.position.z
+            );
+        }
+        else if (screenPosition.x > 1.2f)
+        {
+            GameManager.Instance.homeUI.indicatorRight.gameObject.SetActive(true);
+            GameManager.Instance.homeUI.indicatorRight.transform.position = new Vector3(
+                GameManager.Instance.homeUI.indicatorRight.transform.position.x,
+                transform.position.y,
+                GameManager.Instance.homeUI.indicatorRight.transform.position.z
+            );
+        }
+        else
+        {
+            GameManager.Instance.homeUI.indicatorLeft.gameObject.SetActive(false);
+            GameManager.Instance.homeUI.indicatorRight.gameObject.SetActive(false);
+        }
+
+        if (!canAttack)
+        {
+            return;
+        }
         //raycast to find fish
         RaycastHit2D[] hits = Physics2D.BoxCastAll(
             transform.position,
@@ -132,40 +167,66 @@ public class SwordfishController : FishController
 
         switch (SwordfishState)
         {
-            case 0: // Moving to left side
-                targetX = -15;
+            case 0: // Initial random movement
+                targetX = random.Next(-30, 30) * 0.1f;
                 SwordfishState = 1;
-                fishConfig.speed = 4;
+                fishConfig.speed = 5;
+                canAttack = false;
                 break;
-            case 1: //Moving to right side
-                targetX = 15;
+            case 1: // Random movement phase 1
+                targetX = random.Next(-30, 30) * 0.1f;
                 SwordfishState = 2;
-                fishConfig.speed = 4;
+                fishConfig.speed = 2;
+                canAttack = false;
                 break;
-            case 2: // Moving to left side
-                targetX = -15;
+            case 2: // Random movement phase 2
+                targetX = random.Next(-30, 30) * 0.1f;
                 SwordfishState = 3;
-                fishConfig.speed = 4;
+                fishConfig.speed = 2;
+                canAttack = false;
                 break;
-            case 3: //Moving to right side
-                targetX = 15;
+            case 3: // Random movement phase 3
+                targetX = random.Next(-30, 30) * 0.1f;
                 SwordfishState = 4;
-                fishConfig.speed = 4;
+                fishConfig.speed = 2;
+                canAttack = false;
                 break;
-            case 4:
+            case 4: // Final random movement before attacking phase
                 targetX = random.Next(-30, 30) * 0.1f;
                 SwordfishState = 5;
-                fishConfig.speed = 4;
-                break;
-            case 5:
-                targetX = random.Next(-30, 30) * 0.1f;
-                SwordfishState = 0;
                 fishConfig.speed = 2;
+                canAttack = false;
+                break;
+            case 5: // Moving to left side
+                targetX = -15;
+                SwordfishState = 6;
+                fishConfig.speed = 5;
+                canAttack = false;
+                break;
+            case 6: // Moving to right side (attack phase 1)
+                targetX = 15;
+                SwordfishState = 7;
+                fishConfig.speed = 5;
+                canAttack = true;
+                break;
+            case 7: // Moving to left side (attack phase 2)
+                targetX = -15;
+                SwordfishState = 8;
+                fishConfig.speed = 5;
+                canAttack = true;
+                break;
+            case 8: // Moving to right side (attack phase 3)
+                targetX = 15;
+                SwordfishState = 0;
+                fishConfig.speed = 5;
+                canAttack = true;
                 break;
             default:
-                targetX = transform.localEulerAngles.z;
+                targetX = transform.localPosition.x;
+                SwordfishState = 0;
                 break;
         }
+        showVFX = canAttack;
 
         // Clear attacked fishes list when state changes
         if (previousState != SwordfishState)
@@ -181,6 +242,14 @@ public class SwordfishController : FishController
             targetPosition = new Vector3(targetX, randomY, 0);
         }
         base.Move();
+        if (!showVFX)
+        {
+            vfx.gameObject.SetActive(false);
+            vfxFlip.gameObject.SetActive(false);
+            return;
+        }
+        vfx.gameObject.SetActive(_fishBody.transform.localScale.x < 0);
+        vfxFlip.gameObject.SetActive(_fishBody.transform.localScale.x > 0);
     }
 
     public void StopAttack()

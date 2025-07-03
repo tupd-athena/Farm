@@ -56,6 +56,7 @@ namespace Factory
         public List<GearController> _gearControllers = new List<GearController>();
 
         public List<GameObject> artifacts = new List<GameObject>();
+        public GearDataSO gearDataSO => _gearDataSO;
         public GameObject ItemContainer => _itemContainer;
         public HomeUI HomeUI => homeUI;
         private const string ITEM_POOL_ID = "Item";
@@ -365,7 +366,7 @@ namespace Factory
 
         public bool CheckActiveItemCount()
         {
-            return _activeItems.Count > 50;
+            return _activeItems.Count > 350;
         }
 
         void Update()
@@ -899,6 +900,39 @@ namespace Factory
         public Sprite GetGearBaseColorSprite(GearBaseColorType type)
         {
             return _gearDataSO.gearBaseColors.Find(c => c.type == type).sprite;
+        }
+
+        public void CalculateSpeedOfGears()
+        {
+            _gearControllers.ForEach(g => g.currentSpeed = 0);
+            float headGearSpeed = 0;
+            float multiplier = 1;
+            float multiplierBySpeedUp = CustomValueManager.Instance.GetCustomValueInGame(
+                CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SPEEDUP
+            );
+            multiplierBySpeedUp = multiplierBySpeedUp == 0 ? 1 : multiplierBySpeedUp;
+            float multiplierByScaredTotem = CustomValueManager.Instance.GetCustomValueInGame(
+                CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SCARED_TOTEM
+            );
+            multiplier = multiplierBySpeedUp + multiplierByScaredTotem;
+            headGearSpeed = 0.5f / multiplier / 4f;
+            List<GearController> headGears = _gearControllers.FindAll(g => g.isHead);
+            foreach (var headGear in headGears)
+            {
+                foreach (var connectedGear in headGear.connectedGears)
+                {
+                    var listGear = connectedGear.gear.FindAllConnectedGearsOnBoard();
+                    foreach (var gear in listGear)
+                    {
+                        if (gear.isHead)
+                        {
+                            continue;
+                        }
+                        gear.currentSpeed += gear.gearData.tickValue * headGearSpeed / gear.gearData.maxValue;
+                    }
+                }
+            }
+            _gearControllers.ForEach(g => g.UpdateVelocity(g.currentSpeed));
         }
     }
 }

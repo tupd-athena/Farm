@@ -55,6 +55,9 @@ namespace Factory
 
         public List<ArtifactController> Artifacts;
 
+        public RectTransform indicatorLeft;
+        public RectTransform indicatorRight;
+
 
         public Button StartButton => _startButton;
 

@@ -30,7 +30,7 @@ public class HomingBait : MonoBehaviour
                 5f / itemController.itemData.dropSpeed
             ).SetEase(Ease.InCubic)
             .AsyncWaitForCompletion();
-        GetComponentInChildren<Animator>().Play("Pudding");
+        GetComponentInChildren<Animator>().Play("Pudding_1");
         await Task.Delay(500);
         FindTarget();
 
@@ -88,7 +88,7 @@ public class HomingBait : MonoBehaviour
             attractorComponent.transform.localPosition = Vector3.zero;
             attractorComponent.AddParticleSystem(particle.GetComponentInChildren<ParticleSystem>());
             attractorComponent.movement = UIParticleAttractor.Movement.Sphere;
-            attractorComponent.maxSpeed = 0.2f;
+            attractorComponent.maxSpeed = 0.15f;
             attractorComponent.onAttracted.RemoveAllListeners();
             Debug.Log("haha3");
             attractorComponent.onAttracted.AddListener(() =>

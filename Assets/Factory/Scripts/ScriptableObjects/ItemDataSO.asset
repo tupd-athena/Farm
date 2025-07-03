@@ -76,7 +76,7 @@ MonoBehaviour:
   - itemId: 6
     gearId: 10
     itemName: TheTripple
-    iconName: F5
+    iconName: F5_2
     cost: 0.8
     size: 1.5
     dropType: 1

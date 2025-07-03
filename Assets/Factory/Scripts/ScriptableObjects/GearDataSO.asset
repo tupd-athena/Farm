@@ -23,6 +23,7 @@ MonoBehaviour:
     baseValue: 0.2
     weight: 95
     size: 56
+    hideInInventory: 0
     gearBaseColorType: 0
     gearTypes: 0000000004000000
     customValues: []
@@ -36,6 +37,7 @@ MonoBehaviour:
     baseValue: 1
     weight: 5
     size: 56
+    hideInInventory: 0
     gearBaseColorType: 3
     gearTypes: 0100000002000000
     customValues: []
@@ -49,6 +51,7 @@ MonoBehaviour:
     baseValue: 1
     weight: 5
     size: 56
+    hideInInventory: 0
     gearBaseColorType: 3
     gearTypes: 0100000002000000
     customValues: []
@@ -62,6 +65,7 @@ MonoBehaviour:
     baseValue: 1
     weight: 5
     size: 56
+    hideInInventory: 0
     gearBaseColorType: 3
     gearTypes: 0100000002000000
     customValues: []
@@ -73,8 +77,9 @@ MonoBehaviour:
     cost: 80
     level: 1
     baseValue: 1
-    weight: 25
+    weight: 2
     size: 56
+    hideInInventory: 0
     gearBaseColorType: 7
     gearTypes: 0100000005000000
     customValues:
@@ -92,6 +97,7 @@ MonoBehaviour:
     baseValue: 1
     weight: 2
     size: 56
+    hideInInventory: 0
     gearBaseColorType: 0
     gearTypes: 0000000004000000
     customValues:
@@ -105,8 +111,9 @@ MonoBehaviour:
     cost: 30
     level: 1
     baseValue: 1
-    weight: 25
+    weight: 1
     size: 56
+    hideInInventory: 0
     gearBaseColorType: 5
     gearTypes: 0100000005000000
     customValues:
@@ -120,8 +127,9 @@ MonoBehaviour:
     cost: 40
     level: 1
     baseValue: 1
-    weight: 2500
-    size: 56
+    weight: 1
+    size: 64
+    hideInInventory: 0
     gearBaseColorType: 4
     gearTypes: 0100000005000000
     customValues: []
@@ -133,8 +141,9 @@ MonoBehaviour:
     cost: 40
     level: 1
     baseValue: 1
-    weight: 25
+    weight: 1
     size: 56
+    hideInInventory: 0
     gearBaseColorType: 6
     gearTypes: 0100000005000000
     customValues:
@@ -154,8 +163,9 @@ MonoBehaviour:
     cost: 20
     level: 1
     baseValue: 1
-    weight: 25
+    weight: 1
     size: 67
+    hideInInventory: 0
     gearBaseColorType: 3
     gearTypes: 0100000002000000
     customValues:
@@ -163,14 +173,15 @@ MonoBehaviour:
       customValue: -1
   - id: 10
     itemName: TheTripple
-    iconName: F5
+    iconName: duck
     tickValue: 1
     maxValue: 2
     cost: 20
     level: 1
     baseValue: 1
-    weight: 25
+    weight: 0
     size: 67
+    hideInInventory: 1
     gearBaseColorType: 3
     gearTypes: 0100000002000000
     customValues:

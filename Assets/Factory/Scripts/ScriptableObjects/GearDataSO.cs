@@ -50,6 +50,7 @@ namespace Factory
         public float baseValue;
         public float weight;
         public float size = 56;
+        public bool hideInInventory = false;
         public GearBaseColorType gearBaseColorType = GearBaseColorType.TEXT1;
 
         [System.NonSerialized]
@@ -69,6 +70,7 @@ namespace Factory
             weight = other.weight;
             baseValue = other.baseValue;
             level = other.level;
+            hideInInventory = other.hideInInventory;
             customValues = other.customValues;
             gearTypes = other.gearTypes;
             size = other.size;

@@ -263,7 +263,7 @@ namespace Factory
                             transform
                         );
                         _objectsToDestroy.Add(pudding);
-                        SetSprite(Resources.Load<Sprite>("Sprites/" + gearData0.iconName));
+                        SetSprite(Resources.Load<Sprite>("Sprites/" + "F5_2"));
                         _itemIcon.gameObject.SetActive(false);
                         FreezeConstrain();
                         canCollect = false;

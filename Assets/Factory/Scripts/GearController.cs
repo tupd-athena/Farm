@@ -29,6 +29,12 @@ namespace Factory
         protected TMP_Text _levelText;
 
         [SerializeField]
+        protected Transform _velocityTransform;
+
+        [SerializeField]
+        protected TMP_Text _velocityText;
+
+        [SerializeField]
         protected Sprite _gear1;
 
         [SerializeField]
@@ -68,6 +74,8 @@ namespace Factory
         public System.Action OnDestroy;
 
         private Vector3 _originalScale;
+
+        public float currentSpeed = 0;
         public TMP_Text LevelText => _levelText;
 
         protected void Awake()
@@ -82,6 +90,7 @@ namespace Factory
             {
                 Debug.Log("Default OnDropShop: " + (int)gearData.cost);
             };
+            currentSpeed = 0;
         }
 
         public void FillItemIcon(float fillAmount)
@@ -95,6 +104,8 @@ namespace Factory
             isActive = true;
             _gui.gameObject.SetActive(true);
             _gearIcon.transform.localEulerAngles = new Vector3(0, 0, startAngle);
+            currentSpeed = 0;
+            UpdateVelocity(currentSpeed);
         }
 
         public void Hide()
@@ -120,17 +131,20 @@ namespace Factory
             }
             gearData.Copy(data);
             SetSizeDeltaIcon();
+            UpdateVelocity(0);
             if (gearData.gearTypes.Contains(GearType.Text))
             {
                 _levelText.gameObject.SetActive(true);
                 _gearItemIcon.gameObject.SetActive(false);
                 SetTextGear();
                 SetGear(gearData.gearTypes);
+                _velocityTransform.gameObject.SetActive(false);
             }
             else if (gearData.gearTypes.Contains(GearType.Image))
             {
                 _levelText.gameObject.SetActive(false);
                 _gearItemIcon.gameObject.SetActive(true);
+                _velocityTransform.gameObject.SetActive(true);
                 var sprite = Resources.Load<Sprite>("Sprites/" + data.iconName);
                 if (sprite != null)
                 {
@@ -201,6 +215,22 @@ namespace Factory
                     break;
                 default:
                     break;
+            }
+        }
+
+        public void UpdateVelocity(float value)
+        {
+            if (_velocityText != null)
+            {
+                _velocityText.text = value.ToString("F2") + "/s";
+            }
+            if (value == 0)
+            {
+                _velocityTransform.gameObject.SetActive(false);
+            }
+            else
+            {
+                _velocityTransform.gameObject.SetActive(true);
             }
         }
 
@@ -291,6 +321,7 @@ namespace Factory
                     Rotate();
                     NeighborRotate();
                 });
+            // GameManager.Instance.CalculateSpeedOfGears();
         }
 
         public void UpdateGearIconLevel()
@@ -323,40 +354,74 @@ namespace Factory
             }
         }
 
-        public virtual void Rotate(float angle, float Amplifier, float Multiplier)
+        public virtual void Rotate(
+            float angle,
+            float Amplifier,
+            float Multiplier,
+            int countGearConnectedHeadGear
+        )
         {
-            if (isStop)
-            {
-                return;
-            }
             _gearIcon.transform.DOComplete();
             _gearIcon
                 .transform.DORotate(new Vector3(0, 0, angle + startAngle), 0.1f)
                 .OnComplete(() =>
                 {
-                    UpdateRotationProgress(Amplifier, Multiplier);
+                    UpdateRotationProgress(Amplifier, Multiplier, countGearConnectedHeadGear);
                 });
         }
 
-        public virtual void UpdateRotationProgress(float Amplifier, float Multiplier)
+        public virtual void UpdateRotationProgress(
+            float Amplifier,
+            float Multiplier,
+            int countGearConnectedHeadGear
+        )
         {
             _gearIcon.transform.localEulerAngles = new Vector3(0, 0, startAngle);
-            if (gearData == null || gearData.id == 0 || isHead || isStop)
+            if (gearData == null || gearData.id == 0 || isHead)
             {
                 return;
             }
-            if (GameManager.Instance.GameState.CurrentState != GameStateType.Main)
-                return;
             float AmplifierToTick = Amplifier >= gearData.maxValue ? 0 : Amplifier;
             float AmplifierToCost =
                 Amplifier >= gearData.maxValue ? Amplifier - gearData.maxValue : 0;
             int bonus = (int)(AmplifierToTick / gearData.maxValue);
             var tickValue = gearData.tickValue + (bonus >= 1 ? 0 : AmplifierToTick);
             tickValue *= Multiplier;
+            float multiplier = 1;
+            float multiplierBySpeedUp = CustomValueManager.Instance.GetCustomValueInGame(
+                CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SPEEDUP
+            );
+            multiplierBySpeedUp = multiplierBySpeedUp == 0 ? 1 : multiplierBySpeedUp;
+            float multiplierByScaredTotem = CustomValueManager.Instance.GetCustomValueInGame(
+                CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SCARED_TOTEM
+            );
+            multiplier = multiplierBySpeedUp + multiplierByScaredTotem;
+            UpdateVelocity(
+                (
+                    tickValue
+                    + CustomValueManager.Instance.GetCustomValueInGame(
+                        CustomValueManager.ADD_TICK_VALUE
+                    )
+                )
+                    * (
+                        CustomValueManager.Instance.GetCustomValueInGame(
+                            CustomValueManager.MULTIPLIER_TICK_VALUE
+                        ) + 1
+                    )
+                    * countGearConnectedHeadGear
+                    * 0.5f
+                    * multiplier
+                    / gearData.maxValue
+            );
+            if (isStop || GameManager.Instance.GameState.CurrentState != GameStateType.Main)
+            {
+                return;
+            }
             if (isNotAddTickValue)
             {
                 tickValue = 0;
                 AmplifierToCost = 0;
+                UpdateVelocity(0);
                 return;
             }
             currentTotalTickValue +=
@@ -413,9 +478,25 @@ namespace Factory
                 }
             }
             Amplifier *= GameManager.Instance.GetGearDataByID(0).baseValue;
+            var countGearConnectedHeadGear = 0;
+            foreach (var ConnectedGear in allConnectedGears)
+            {
+                foreach (var x in ConnectedGear.connectedGears)
+                {
+                    if (x.gear.isHead && x.gear.isActive)
+                    {
+                        countGearConnectedHeadGear++;
+                    }
+                }
+            }
             foreach (var gear in allConnectedGears)
             {
-                gear.Rotate(45 * (gear.isReverse ? -1 : 1), Amplifier, Multiplier);
+                gear.Rotate(
+                    45 * (gear.isReverse ? -1 : 1),
+                    Amplifier,
+                    Multiplier,
+                    countGearConnectedHeadGear
+                );
             }
         }
 
