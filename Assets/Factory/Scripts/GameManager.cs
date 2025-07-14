@@ -77,6 +77,10 @@ namespace Factory
 
         public DayConfiguration dayConfiguration;
 
+        public long sumOfFishesHealth = 0;
+
+        public int totalHP;
+
         public float GetBottomYWithOffset(float offset = 0.1f)
         {
             return bottom.position.y + offset;
@@ -141,19 +145,44 @@ namespace Factory
             _isFirstOpenShop = false;
             isStop = true;
             _currentLevelConfig = GetCurrentLevelConfig();
-            dayConfiguration = GetDayConfig();
             currentDay = 0;
+            totalHP = 0;
+            dayConfiguration = GetDayConfig();
+            totalHP = dayConfiguration.maxInPool;
             _gold = 0;
+            Debug.Log("new: 1");
             CustomValueManager.Instance.ClearCustomValueInGame();
             InitGears(_currentLevelConfig.gridSize);
+            Debug.Log("new: 2");
             InitFishes(dayConfiguration.fishConfigs);
+            Debug.Log("new: 3");
             UpdateGold(_gold + _currentLevelConfig.initialLevelCurrency);
             artifacts.ForEach(a => a.SetActive(false));
+            Debug.Log("new: 4");
+            // homeUI.ShowInventory();
             // homeUI.HideArtifactPopup();
-            RandomArtifactPopup();
+            Debug.Log("new: 5");
+            // RandomArtifactPopup();
+            Debug.Log("new: 6");
             ChangeGameState(GameStateType.Shop);
             homeUI.UpdateDay();
+            homeUI.HideArtifactPopup();
+            if (
+                InventoryManager.Instance.inventoryData != null
+                && InventoryManager.Instance.inventoryData.giftAmount > 0
+            )
+            {
+                InventoryManager.Instance.ShowInventory();
+                InventoryManager.Instance.UpdateGiftText();
+                InventoryManager.Instance.ShowRewardCards();
+            }
+            else
+            {
+                homeUI.HideInventory();
+            }
+            Debug.Log("new: 7");
             await homeUI.ShowGameStartPanel();
+            Debug.Log("new: 8");
         }
 
         public LevelConfiguration GetCurrentLevelConfig()
@@ -165,7 +194,15 @@ namespace Factory
         {
             System.Random random = new System.Random();
             DayConfiguration dayConfig = null;
-            if (currentDay % 10 != 5 && currentDay % 10 != 0 || currentDay == 0)
+            if (currentDay < _levelConfigSO.fixedDayConfigurations.Count)
+            {
+                return dayConfig = _levelConfigSO.GetDayConfig(
+                    _levelConfigSO.fixedDayConfigurations[currentDay],
+                    GetMaxTotalFishHP(),
+                    GetMaxCoinDrop()
+                );
+            }
+            if (currentDay % 10 != 4 && currentDay % 10 != 9 || currentDay == 0)
             {
                 dayConfig = _levelConfigSO.GetDayConfig(
                     _levelConfigSO.normalDayConfigurations[
@@ -175,20 +212,20 @@ namespace Factory
                     GetMaxCoinDrop()
                 );
             }
-            else if (currentDay % 10 == 5)
+            else if (currentDay % 10 == 4)
             {
                 dayConfig = _levelConfigSO.GetDayConfig(
-                    _levelConfigSO.bossDayConfigurations[
+                    _levelConfigSO.specialDayConfigurations[
                         random.Next(0, _levelConfigSO.bossDayConfigurations.Count)
                     ],
                     GetMaxTotalFishHP(),
                     GetMaxCoinDrop()
                 );
             }
-            else if (currentDay % 10 == 0 && currentDay != 0)
+            else if (currentDay % 10 == 9 && currentDay != 0)
             {
                 dayConfig = _levelConfigSO.GetDayConfig(
-                    _levelConfigSO.specialDayConfigurations[
+                    _levelConfigSO.bossDayConfigurations[
                         random.Next(0, _levelConfigSO.specialDayConfigurations.Count)
                     ],
                     GetMaxTotalFishHP(),
@@ -200,12 +237,18 @@ namespace Factory
 
         public long GetMaxTotalFishHP()
         {
-            return _currentLevelConfig.maxTotalFishHP * (long)Mathf.Pow(1.05f, currentDay);
+            sumOfFishesHealth =
+                _currentLevelConfig.maxTotalFishHP * (1 + (long)(0.2f * Mathf.Pow(2, currentDay)));
+            return _currentLevelConfig.maxTotalFishHP
+                * (1 + (long)(0.2f * Mathf.Pow(1, currentDay)));
         }
 
         public int GetMaxCoinDrop()
         {
-            return (int)(_currentLevelConfig.maxCoinDrop * (float)Mathf.Pow(1.05f, currentDay));
+            return (int)(
+                _currentLevelConfig.maxCoinDrop
+                * (float)Mathf.Clamp(Mathf.Pow(1.05f, currentDay), 1, 5)
+            );
         }
 
         public void InitFishes(List<FishConfigDay> fishConfigs)
@@ -221,10 +264,16 @@ namespace Factory
             ClearItems();
             currentDay++;
             dayConfiguration = GetDayConfig();
+            if (currentDay % 10 == 5)
+            {
+                RandomArtifactPopup();
+            }
             Debug.Log($"NextDay {currentDay}");
             isStop = true;
-            _currentLevelConfig.maxTotalFishHP =
-                _currentLevelConfig.maxTotalFishHP * (1 + (long)Mathf.Pow(0.05f, currentDay));
+            sumOfFishesHealth =
+                _currentLevelConfig.maxTotalFishHP * (1 + (long)(0.3f * Mathf.Pow(2, currentDay)));
+            totalHP += dayConfiguration.maxInPool;
+            Debug.Log($"Max Total Fish HP: {_currentLevelConfig.maxTotalFishHP}");
             await homeUI.ShowGameStartPanel();
             InitFishes(dayConfiguration.fishConfigs);
             Debug.Log($"UpdateGold + {_currentLevelConfig.initialLevelCurrency}");
@@ -277,6 +326,32 @@ namespace Factory
             {
                 gear.FillItemIcon(1);
             }
+        }
+
+        public ListInventoryItemData GetInventoryData()
+        {
+            return homeUI.InventoryManager.GetInventoryData();
+        }
+
+        public float GetCustomValueOfInventoryByID(int itemId, string paraName)
+        {
+            return GetInventoryData()
+                .items.FirstOrDefault(item => item.id == itemId)
+                .gearData.GetCustomValue(paraName);
+        }
+
+        public float GetCustomValueForMultiplyByLevel(int itemId)
+        {
+            return 1
+                + (
+                    GetInventoryData()
+                        .items.FirstOrDefault(item => item.id == itemId)
+                        .gearData.GetCustomValue("level") - 1
+                )
+                    * gearDataSO
+                        .gearDataList.FirstOrDefault(g => g.id == itemId)
+                        .customValues.FirstOrDefault(c => c.id == "mult")
+                        .customValue;
         }
 
         public GameObject SpawnItem(
@@ -381,7 +456,11 @@ namespace Factory
         {
             foreach (var item in _activeItems)
             {
-                _itemPool.ReturnObject(item, ITEM_POOL_ID);
+                item.transform.DOScale(Vector3.zero, 0.5f)
+                    .OnComplete(() =>
+                    {
+                        _itemPool.ReturnObject(item, ITEM_POOL_ID);
+                    });
             }
             _activeItems.Clear();
         }
@@ -405,6 +484,7 @@ namespace Factory
         {
             _gold += gold;
             homeUI.UpdateGoldText(_gold);
+            CheckGoldAllGearsInShop();
         }
 
         public void InitGears(Vector2 gridSize)
@@ -433,6 +513,7 @@ namespace Factory
                         gearController.startAngle = -3.5f;
                     }
                     gearController.gridCoordinate = new Vector2(i, j);
+                    gearController.gameObject.name = "Gear_" + i + "_" + j;
                     gearController.Hide();
                     gearController.SetGear(new List<GearType> { GearType.Text });
                     gearController.OnRotate += (float Amplifier) =>
@@ -630,6 +711,14 @@ namespace Factory
         [ContextMenu("CheckGoldAllGearsInShop")]
         public void CheckGoldAllGearsInShop()
         {
+            if (
+                homeUI.gameObject.activeInHierarchy == false
+                || homeUI.ShopItems == null
+                || homeUI.ShopItems.Count == 0
+            )
+            {
+                return;
+            }
             foreach (var shopItem in homeUI.ShopItems)
             {
                 if (shopItem.gear.isInShop)
@@ -701,7 +790,12 @@ namespace Factory
                 UpdateGold(_gold);
             }
             var totalWeight = 0f;
-            foreach (var gearData in _gearDataSO.gearDataList)
+            List<GearData> availableGears = new List<GearData>();
+            availableGears = _gearDataSO
+                .gearDataList.FindAll(g => InventoryManager.Instance.HasInventoryData(g))
+                .ToList();
+            availableGears.CopyTo(availableGears.ToArray());
+            foreach (var gearData in availableGears)
             {
                 totalWeight += gearData.weight;
             }
@@ -712,7 +806,7 @@ namespace Factory
                 float randomValue = random.Next(0, (int)totalWeight);
                 float currentWeight = 0f;
 
-                foreach (var gearData in _gearDataSO.gearDataList)
+                foreach (var gearData in availableGears)
                 {
                     currentWeight += gearData.weight;
                     if (randomValue <= currentWeight)
@@ -748,8 +842,7 @@ namespace Factory
                     ActiveTheAirPump(artifactData);
                     break;
                 case "clam": // Artifact 3
-                    OnGameStart += () =>
-                        Invoke(nameof(SpawnPearl), artifactData.GetValueByName("cooldown"));
+                    OnGameStart += () => SpawnPearl();
                     artifacts[2].SetActive(true);
                     break;
                 case "treasure": // Artifact 4
@@ -772,13 +865,7 @@ namespace Factory
                         CustomValueManager.HEART_BONUS,
                         artifactData.GetValueByName("value")
                     );
-                    FishManager.Instance.UpdateFishCountText(
-                        dayConfiguration.maxInPool
-                            + (int)
-                                CustomValueManager.Instance.GetCustomValueInGame(
-                                    CustomValueManager.HEART_BONUS
-                                )
-                    );
+                    FishManager.Instance.UpdateFishCountText();
                     artifacts[5].SetActive(true);
                     break;
                 default:
@@ -836,23 +923,52 @@ namespace Factory
 
         public void RandomArtifactPopup()
         {
-            System.Random random = new System.Random();
-            int amount = random.Next(1, _artifactConfigSO.artifactDatas.Count + 1);
-            List<int> currentIndexes = new List<int>();
-            List<ArtifactData> currentArtifacts = new List<ArtifactData>();
-            for (int i = 0; i < _artifactConfigSO.artifactDatas.Count; i++)
+            try
             {
-                currentIndexes.Add(i);
+                System.Random random = new System.Random();
+                int amount = random.Next(1, 4);
+                List<int> currentIndexes = new List<int>();
+                List<ArtifactData> currentArtifacts = new List<ArtifactData>();
+                int totalWeight = 0;
+                foreach (var artifactData in _artifactConfigSO.artifactDatas)
+                {
+                    totalWeight += artifactData.weight;
+                }
+                for (int i = 0; i < _artifactConfigSO.artifactDatas.Count; i++)
+                {
+                    currentIndexes.Add(i);
+                }
+                for (int i = 0; i < amount; i++)
+                {
+                    int randomWeight = random.Next(0, totalWeight);
+                    int currentWeight = 0;
+                    int artifactIndex = 0;
+                    foreach (var index in currentIndexes)
+                    {
+                        currentWeight += _artifactConfigSO.artifactDatas[index].weight;
+                        if (randomWeight <= currentWeight)
+                        {
+                            artifactIndex = index;
+                            break;
+                        }
+                    }
+                    Debug.Log("RandomArtifactPopup: " + artifactIndex);
+                    artifactIndex = Mathf.Clamp(
+                        artifactIndex,
+                        0,
+                        _artifactConfigSO.artifactDatas.Count - 1
+                    );
+                    ArtifactData artifactData = _artifactConfigSO.artifactDatas[artifactIndex];
+                    currentArtifacts.Add(artifactData);
+                    currentIndexes.Remove(artifactIndex);
+                    totalWeight -= artifactData.weight;
+                }
+                homeUI.ShowArtifactPopup(currentArtifacts);
             }
-            for (int i = 0; i < amount; i++)
+            catch (System.Exception e)
             {
-                int randomIndex = random.Next(0, currentIndexes.Count);
-                int artifactIndex = currentIndexes[randomIndex];
-                ArtifactData artifactData = _artifactConfigSO.artifactDatas[artifactIndex];
-                currentArtifacts.Add(artifactData);
-                currentIndexes.RemoveAt(randomIndex);
+                Debug.LogError("RandomArtifactPopup Error: " + e.Message);
             }
-            homeUI.ShowArtifactPopup(currentArtifacts);
         }
 
         public void SpawnPearl()
@@ -867,7 +983,25 @@ namespace Factory
             );
             pearl.transform.position = artifacts[2].transform.position;
             pearl.GetComponent<CoinController>().value = (int)artifact.GetValueByName("gold");
-            Invoke(nameof(SpawnPearl), artifact.GetValueByName("cooldown"));
+            pearl.GetComponent<CoinController>().canClick = false;
+            pearl.transform.localScale = Vector3.zero;
+            pearl.GetComponent<CoinController>().sparkleEffect.gameObject.SetActive(false);
+            pearl
+                .transform.DOScale(Vector3.one * 0.5f, artifact.GetValueByName("cooldown"))
+                .OnComplete(() =>
+                {
+                    pearl.GetComponent<CoinController>().canClick = true;
+                    pearl.GetComponent<CoinController>().sparkleEffect.gameObject.SetActive(true);
+                });
+            pearl.GetComponent<CoinController>().OnCollect += () =>
+            {
+                CollectPearl(artifact);
+            };
+        }
+
+        public void CollectPearl(ArtifactData artifact)
+        {
+            SpawnPearl();
         }
 
         public ItemData GetItemDataByGearID(int id)
@@ -897,6 +1031,11 @@ namespace Factory
             return _gearDataSO.gearBaseColors.Find(c => c.type == type).sprite;
         }
 
+        public GearRarityData GetGearRarityData(GearRarity rarityType)
+        {
+            return _gearDataSO.gearRarityDataList.Find(r => r.rarity == rarityType);
+        }
+
         public void CalculateSpeedOfGears()
         {
             _gearControllers.ForEach(g => g.currentSpeed = 0);
@@ -910,6 +1049,16 @@ namespace Factory
             );
             multiplier += multiplierBySpeedUp + multiplierByScaredTotem;
             headGearSpeed = 0.5f / multiplier / 4f;
+            Debug.Log(
+                "CalculateSpeedOfGears: "
+                    + headGearSpeed
+                    + " multiplier: "
+                    + multiplier
+                    + " multiplierBySpeedUp: "
+                    + multiplierBySpeedUp
+                    + " multiplierByScaredTotem: "
+                    + multiplierByScaredTotem
+            );
             List<GearController> headGears = _gearControllers.FindAll(g => g.isHead);
             foreach (var headGear in headGears)
             {
@@ -918,20 +1067,17 @@ namespace Factory
                     var listGear = connectedGear.gear.FindAllConnectedGearsOnBoard();
                     foreach (var gear in listGear)
                     {
-                        if (
-                            gear.isHead
-                            || gear.gearData == null
-                            || gear.gearData.gearTypes.Contains(GearType.Text)
-                        )
+                        if (gear.isHead || gear.gearData == null)
                         {
                             continue;
                         }
-                        gear.currentSpeed +=
+                        gear.currentSpeed =
                             gear.gearData.tickValue * headGearSpeed / gear.gearData.maxValue;
                     }
                 }
             }
             _gearControllers.ForEach(g => g.UpdateVelocity(g.currentSpeed));
         }
+        //
     }
 }

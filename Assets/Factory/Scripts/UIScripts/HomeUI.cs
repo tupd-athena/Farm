@@ -15,6 +15,9 @@ namespace Factory
         private GameObject _shopPopup;
 
         [SerializeField]
+        private InventoryManager _inventoryManager;
+
+        [SerializeField]
         private RecycleBin _recycleBin;
 
         [SerializeField]
@@ -54,6 +57,8 @@ namespace Factory
         private GameObject _artifactPopup;
 
         public List<ArtifactController> Artifacts;
+
+        public InventoryManager InventoryManager => _inventoryManager;
 
         public RectTransform indicatorLeft;
         public RectTransform indicatorRight;
@@ -361,7 +366,7 @@ namespace Factory
 
         public void UpdateTotalFishText(int totalFish)
         {
-            _totalFishText.text = totalFish.ToString();
+            _totalFishText.text = Mathf.Clamp(totalFish, 0, 9999).ToString();
         }
 
         public void WarningGoldPanel()
@@ -383,6 +388,17 @@ namespace Factory
                 return;
             }
             GameManager.Instance.RandomGearsInShop();
+        }
+
+        public void HideInventory()
+        {
+            _inventoryManager.Close();
+        }
+
+        public void ShowInventory()
+        {
+            _inventoryManager.gameObject.SetActive(true);
+            _inventoryManager.ShowInventory();
         }
     }
 

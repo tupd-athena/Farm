@@ -9,6 +9,7 @@ namespace Factory
     public class LevelConfigSO : ScriptableObject
     {
         public List<LevelConfiguration> levelConfigs;
+        public List<DayConfiguration> fixedDayConfigurations;
         public List<DayConfiguration> normalDayConfigurations;
         public List<DayConfiguration> bossDayConfigurations;
         public List<DayConfiguration> specialDayConfigurations;
@@ -18,32 +19,57 @@ namespace Factory
 
         void OnValidate()
         {
-            foreach (var day in normalDayConfigurations)
+            foreach (var day in fixedDayConfigurations)
             {
+                int totalFishes = 0;
                 foreach (var fish in day.fishConfigs)
                 {
                     fish.fishConfig = fishConfigSO.fishConfigs.Find(f =>
                         f.fishType == fish.fishType
                     );
+                    totalFishes += fish.amount;
                 }
+                day.numberOfFishes = totalFishes;
+                day.maxInPool = Mathf.Max(1, day.maxInPool);
+            }
+            foreach (var day in normalDayConfigurations)
+            {
+                int totalFishes = 0;
+                foreach (var fish in day.fishConfigs)
+                {
+                    fish.fishConfig = fishConfigSO.fishConfigs.Find(f =>
+                        f.fishType == fish.fishType
+                    );
+                    totalFishes += fish.amount;
+                }
+                day.numberOfFishes = totalFishes;
+                day.maxInPool = Mathf.Max(1, day.maxInPool);
             }
             foreach (var day in bossDayConfigurations)
             {
+                int totalFishes = 0;
                 foreach (var fish in day.fishConfigs)
                 {
                     fish.fishConfig = fishConfigSO.fishConfigs.Find(f =>
                         f.fishType == fish.fishType
                     );
+                    totalFishes += fish.amount;
                 }
+                day.numberOfFishes = totalFishes;
+                day.maxInPool = Mathf.Max(1, day.maxInPool);
             }
             foreach (var day in specialDayConfigurations)
             {
+                int totalFishes = 0;
                 foreach (var fish in day.fishConfigs)
                 {
                     fish.fishConfig = fishConfigSO.fishConfigs.Find(f =>
                         f.fishType == fish.fishType
                     );
+                    totalFishes += fish.amount;
                 }
+                day.numberOfFishes = totalFishes;
+                day.maxInPool = Mathf.Max(1, day.maxInPool);
             }
         }
 
@@ -53,10 +79,12 @@ namespace Factory
             int maxCoinDrop
         )
         {
-            List<FishConfigDay> fishes = dayConfiguration.fishConfigs;
+            DayConfiguration newDayConfiguration = new DayConfiguration();
+            newDayConfiguration.Copy(dayConfiguration);
+            newDayConfiguration.fishConfigs = new List<FishConfigDay>();
+            newDayConfiguration.fishConfigs = dayConfiguration.fishConfigs;
             int totalWeight = 0;
-            int totalFishes = 0;
-            foreach (var fish in fishes)
+            foreach (var fish in newDayConfiguration.fishConfigs)
             {
                 var fishConfig = new FishConfig();
                 var config = fishConfigSO.fishConfigs.Find(
@@ -65,7 +93,7 @@ namespace Factory
                 if (config == null)
                 {
                     Debug.LogError("FishConfig not found: " + fish.fishType);
-                    fishes.Remove(fish);
+                    newDayConfiguration.fishConfigs.Remove(fish);
                     continue;
                 }
                 fishConfig.Copy(
@@ -80,21 +108,15 @@ namespace Factory
                 }
                 fish.fishConfig.Copy(fishConfig);
                 totalWeight += fishConfig.weight;
-                totalFishes += fish.amount;
-            }
-            if (totalFishes == 0)
-            {
-                Debug.LogError("Total fishes is 0");
             }
             if (totalWeight == 0)
             {
                 Debug.LogError("Total weight is 0");
             }
-            dayConfiguration.numberOfFishes = totalFishes;
-            float moneyOfDay = dayConfiguration.percentOutputCash * maxTotalFishHP / 100;
-            float coinOfDay = dayConfiguration.percentOutputCash * maxCoinDrop / 100;
+            float moneyOfDay =  maxTotalFishHP;
+            float coinOfDay = maxCoinDrop;
 
-            foreach (var fish in fishes)
+            foreach (var fish in newDayConfiguration.fishConfigs)
             {
                 fish.fishConfig.fishCurrencyValue = Mathf.Max(
                     Mathf.RoundToInt(
@@ -113,8 +135,7 @@ namespace Factory
                     1
                 );
             }
-
-            return dayConfiguration;
+            return newDayConfiguration;
         }
     }
 
@@ -149,5 +170,23 @@ namespace Factory
         public int initialDayCurrency = 50;
         public int percentOutputCash;
         public int maxInPool = 10;
+
+        public void Copy(DayConfiguration other)
+        {
+            dayNumber = other.dayNumber;
+            numberOfFishes = other.numberOfFishes;
+            initialDayCurrency = other.initialDayCurrency;
+            percentOutputCash = other.percentOutputCash;
+            maxInPool = other.maxInPool;
+            fishConfigs = new List<FishConfigDay>();
+            foreach (var fish in other.fishConfigs)
+            {
+                var newFish = new FishConfigDay();
+                newFish.fishType = fish.fishType;
+                newFish.amount = fish.amount;
+                newFish.fishConfig = fish.fishConfig;
+                fishConfigs.Add(newFish);
+            }
+        }
     }
 }

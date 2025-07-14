@@ -19,132 +19,209 @@ MonoBehaviour:
     tickValue: 1
     maxValue: 1
     cost: 10
+    description: Increase power of all connected gears.
     level: 1
     baseValue: 0.2
     weight: 95
     size: 56
     hideInInventory: 0
+    rarity: 0
     gearBaseColorType: 0
+    gearBaseColor:
+      type: 0
+      sprite: {fileID: 21300000, guid: 73dff39fe971849459362833a51721d4, type: 3}
     gearTypes: 0000000004000000
-    customValues: []
+    customValues:
+    - id: level
+      customValue: 1
+    - id: mult
+      customValue: 0.5
   - id: 1
-    itemName: Food1
+    itemName: Normal Food
     iconName: F1
     tickValue: 1
     maxValue: 5
     cost: 12
+    description: Regular food for fish. They really need this.
     level: 1
     baseValue: 1
     weight: 5
     size: 56
     hideInInventory: 0
+    rarity: 0
     gearBaseColorType: 3
+    gearBaseColor:
+      type: 3
+      sprite: {fileID: 21300000, guid: 4628e7929cc094c84bd3819ff7fde0b1, type: 3}
     gearTypes: 0100000002000000
-    customValues: []
+    customValues:
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   - id: 2
-    itemName: Food2
+    itemName: Light Food
     iconName: F2
     tickValue: 1.2
     maxValue: 5
     cost: 12
+    description: It's not actually illuminated, just not heavy.
     level: 1
     baseValue: 1
     weight: 5
     size: 56
     hideInInventory: 0
+    rarity: 0
     gearBaseColorType: 3
+    gearBaseColor:
+      type: 3
+      sprite: {fileID: 21300000, guid: 4628e7929cc094c84bd3819ff7fde0b1, type: 3}
     gearTypes: 0100000002000000
-    customValues: []
+    customValues:
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   - id: 3
-    itemName: Food3
+    itemName: Weighted Food
     iconName: F3
-    tickValue: 0.8
-    maxValue: 5
+    tickValue: 1
+    maxValue: 7
     cost: 12
+    description: This food sinks quickly but provide more nutrients.
     level: 1
     baseValue: 1
     weight: 5
     size: 56
     hideInInventory: 0
+    rarity: 0
     gearBaseColorType: 3
+    gearBaseColor:
+      type: 3
+      sprite: {fileID: 21300000, guid: 4628e7929cc094c84bd3819ff7fde0b1, type: 3}
     gearTypes: 0100000002000000
-    customValues: []
+    customValues:
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   - id: 4
-    itemName: SpeedUP
+    itemName: Speed Up
     iconName: SpecialGears/Speed
     tickValue: 1
     maxValue: 12
     cost: 80
+    description: Speeds up all gears x2 when activated.
     level: 1
     baseValue: 1
     weight: 2
     size: 56
     hideInInventory: 0
+    rarity: 2
     gearBaseColorType: 7
+    gearBaseColor:
+      type: 7
+      sprite: {fileID: 21300000, guid: 17d1ef57f9baa49c1a8253c1b013cbf1, type: 3}
     gearTypes: 0100000005000000
     customValues:
     - id: coolDown
       customValue: 5
     - id: multiplier
       customValue: 2
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   - id: 5
     itemName: Multiplier
     iconName: multiplier
     tickValue: 1
     maxValue: 1
     cost: 50
+    description: Increases value of other gears.
     level: 1
     baseValue: 1
     weight: 2
     size: 56
     hideInInventory: 0
+    rarity: 1
     gearBaseColorType: 0
+    gearBaseColor:
+      type: 0
+      sprite: {fileID: 21300000, guid: 73dff39fe971849459362833a51721d4, type: 3}
     gearTypes: 0000000004000000
     customValues:
     - id: ver1
       customValue: 2
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   - id: 6
-    itemName: Dopamine
+    itemName: Invicible Star
     iconName: SpecialGears/Star
     tickValue: 1
     maxValue: 6
     cost: 30
+    description: Fish become invicible when this is activated.
     level: 1
     baseValue: 1
     weight: 1
     size: 56
     hideInInventory: 0
+    rarity: 3
     gearBaseColorType: 5
+    gearBaseColor:
+      type: 5
+      sprite: {fileID: 21300000, guid: 8b59d3b36e66b46dc93f69c20f5833dd, type: 3}
     gearTypes: 0100000005000000
     customValues:
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
     - id: Duration
-      customValue: 4
+      customValue: 0.5
   - id: 7
-    itemName: HomingBait
+    itemName: Homing Food
     iconName: SpecialGears/F5
     tickValue: 1
     maxValue: 8
     cost: 40
+    description: Feed the hungriest fish.
     level: 1
-    baseValue: 1
+    baseValue: 0.3
     weight: 1
     size: 64
     hideInInventory: 0
+    rarity: 2
     gearBaseColorType: 4
+    gearBaseColor:
+      type: 4
+      sprite: {fileID: 21300000, guid: 4d24c665dd1054af0b569c1ac2d6f51a, type: 3}
     gearTypes: 0100000005000000
-    customValues: []
+    customValues:
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   - id: 8
-    itemName: HeartBait
+    itemName: Exploding Food.
     iconName: SpecialGears/B1
     tickValue: 1
     maxValue: 10
     cost: 40
+    description: Let's party!
     level: 1
-    baseValue: 1
+    baseValue: 0.6
     weight: 1
     size: 56
     hideInInventory: 0
+    rarity: 2
     gearBaseColorType: 6
+    gearBaseColor:
+      type: 6
+      sprite: {fileID: 21300000, guid: 33039acbd441a493d90910c9d7d19105, type: 3}
     gearTypes: 0100000005000000
     customValues:
     - id: radius
@@ -155,38 +232,60 @@ MonoBehaviour:
       customValue: 1.5
     - id: cycle
       customValue: 1
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   - id: 9
-    itemName: TheTwin
+    itemName: Splitting Food
     iconName: F4
     tickValue: 1
     maxValue: 2
     cost: 20
+    description: The two are having a divorce.
     level: 1
-    baseValue: 1
+    baseValue: 0.7
     weight: 1
     size: 67
     hideInInventory: 0
+    rarity: 1
     gearBaseColorType: 3
+    gearBaseColor:
+      type: 3
+      sprite: {fileID: 21300000, guid: 4628e7929cc094c84bd3819ff7fde0b1, type: 3}
     gearTypes: 0100000002000000
     customValues:
     - id: depth
       customValue: -1
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   - id: 10
     itemName: TheTripple
     iconName: duck
     tickValue: 1
     maxValue: 2
     cost: 20
+    description: 
     level: 1
     baseValue: 1
     weight: 0
     size: 67
     hideInInventory: 1
+    rarity: 1
     gearBaseColorType: 3
+    gearBaseColor:
+      type: 3
+      sprite: {fileID: 21300000, guid: 4628e7929cc094c84bd3819ff7fde0b1, type: 3}
     gearTypes: 0100000002000000
     customValues:
     - id: depth
       customValue: -1
+    - id: mult
+      customValue: 0.5
+    - id: level
+      customValue: 1
   gearBaseColors:
   - type: 0
     sprite: {fileID: 21300000, guid: 73dff39fe971849459362833a51721d4, type: 3}
@@ -204,3 +303,22 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 33039acbd441a493d90910c9d7d19105, type: 3}
   - type: 7
     sprite: {fileID: 21300000, guid: 17d1ef57f9baa49c1a8253c1b013cbf1, type: 3}
+  gearRarityDataList:
+  - rarity: 0
+    color: {r: 0.764151, g: 0.63957816, b: 0.46497867, a: 1}
+    icon: {fileID: 21300000, guid: dd77367546bf4433dbbb2317a935df54, type: 3}
+  - rarity: 1
+    color: {r: 0.3074849, g: 1, b: 0.2688679, a: 1}
+    icon: {fileID: 21300000, guid: e6eea4f7cbb9f46f79c0fe06180fa5b3, type: 3}
+  - rarity: 2
+    color: {r: 0, g: 0.4528575, b: 1, a: 1}
+    icon: {fileID: 21300000, guid: 35d7e6588f1f34db1b9a5e62f4efdf77, type: 3}
+  - rarity: 3
+    color: {r: 0.4509802, g: 0, b: 1, a: 1}
+    icon: {fileID: 21300000, guid: 10d23572713d041c596abf5c00be11dc, type: 3}
+  - rarity: 4
+    color: {r: 1, g: 0.7401557, b: 0, a: 1}
+    icon: {fileID: 21300000, guid: 84063999b9e1741d099c1d8f7bbc0f7a, type: 3}
+  - rarity: 5
+    color: {r: 1, g: 0.13192508, b: 0, a: 1}
+    icon: {fileID: 21300000, guid: c7ade68a31f1d4e12a57617409b6ee8a, type: 3}

@@ -28,12 +28,12 @@ public class HomingBait : MonoBehaviour
             .DOMoveY(
                 GameManager.Instance.GetBottomYWithOffset() + random.Next(0, 10) * 0.1f,
                 5f / itemController.itemData.dropSpeed
-            ).SetEase(Ease.InCubic)
+            )
+            .SetEase(Ease.InCubic)
             .AsyncWaitForCompletion();
         GetComponentInChildren<Animator>().Play("Pudding_1");
         await Task.Delay(500);
         FindTarget();
-
     }
 
     public void FindTarget()
@@ -65,6 +65,19 @@ public class HomingBait : MonoBehaviour
             transform.DOScale(0, 0.3f).SetEase(Ease.InExpo);
             targetFish = fish;
             var particle = Instantiate(Resources.Load("Prefabs/HomingVFX") as GameObject);
+            var main = particle
+                .GetComponent<UIParticle>()
+                .particles[0]
+                .GetComponent<ParticleSystem>();
+            main.emission.SetBurst(
+                0,
+                new ParticleSystem.Burst(
+                    1,
+                    GameManager.Instance.GetCustomValueForMultiplyByLevel(
+                        itemController.itemData.gearId
+                    )
+                )
+            );
             Debug.Log("haha1");
             if (particle == null)
             {

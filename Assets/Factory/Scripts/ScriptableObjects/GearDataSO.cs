@@ -9,6 +9,7 @@ namespace Factory
     {
         public List<GearData> gearDataList;
         public List<GearBaseColor> gearBaseColors;
+        public List<GearRarityData> gearRarityDataList;
 
         void OnValidate()
         {
@@ -22,6 +23,16 @@ namespace Factory
                 if (gearBaseColor != null)
                 {
                     gearData.gearBaseColor = gearBaseColor;
+                }
+                if (gearData.customValues.Count == 0 || gearData.customValues.Find(c => c.id == "level") == null)
+                {
+                    var levelCustomValue = new GearDataCustomValue { id = "level", customValue = 1 };
+                    gearData.customValues.Add(levelCustomValue);
+                }
+                if(gearData.customValues.Find(c => c.id == "mult") == null)
+                {
+                    var levelCustomValue = new GearDataCustomValue { id = "mult", customValue = 0.5f};
+                    gearData.customValues.Add(levelCustomValue);
                 }
             }
         }
@@ -46,14 +57,15 @@ namespace Factory
         public float tickValue;
         public float maxValue;
         public int cost;
+        public string description = "";
         public int level = 1;
         public float baseValue;
         public float weight;
         public float size = 56;
         public bool hideInInventory = false;
+        public GearRarity rarity = GearRarity.Common;
         public GearBaseColorType gearBaseColorType = GearBaseColorType.TEXT1;
 
-        [System.NonSerialized]
         public GearBaseColor gearBaseColor;
         public List<GearType> gearTypes = new List<GearType>();
 
@@ -73,9 +85,20 @@ namespace Factory
             hideInInventory = other.hideInInventory;
             customValues = other.customValues;
             gearTypes = other.gearTypes;
+            description = other.description;
             size = other.size;
             gearBaseColorType = other.gearBaseColorType;
             gearBaseColor = other.gearBaseColor;
+            rarity = other.rarity;
+        }
+
+        public float GetCustomValue(string id)
+        {
+            if (customValues == null || customValues.Count == 0)
+                return 0f;
+
+            var customValue = customValues.Find(c => c.id == id);
+            return customValue != null ? customValue.customValue : 0f;
         }
     }
 
@@ -96,6 +119,31 @@ namespace Factory
         IMAGE3,
         IMAGE4,
         IMAGE5,
+    }
+
+    [System.Serializable]
+    public class GearRarityData
+    {
+        public GearRarity rarity;
+        public Color color;
+        public Sprite icon;
+
+        public void Copy(GearRarityData other)
+        {
+            rarity = other.rarity;
+            color = other.color;
+            icon = other.icon;
+        }
+    }
+
+    public enum GearRarity
+    {
+        Common,
+        Uncommon,
+        Rare,
+        Epic,
+        Legendary,
+        Mythic,
     }
 
     [System.Serializable]

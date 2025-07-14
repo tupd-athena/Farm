@@ -14,7 +14,7 @@ public class SpeedUpGear : MonoBehaviour
     public void Start()
     {
         gearController = GetComponent<GearController>();
-        if(gearController == null || gearController.isInShop)
+        if (gearController == null || gearController.isInShop)
         {
             return;
         }
@@ -32,10 +32,13 @@ public class SpeedUpGear : MonoBehaviour
     private void SetCoolDown()
     {
         _coolDown = 0;
-        _coolDownMax = gearController.gearData.customValues.Find(x => x.id == "coolDown").customValue;
+        _coolDownMax = gearController
+            .gearData.customValues.Find(x => x.id == "coolDown")
+            .customValue;
         CustomValueManager.Instance.AddCustomValueInGame(
             CustomValueManager.MULTIPLIER_HEAD_GEAR_BY_SPEEDUP,
             gearController.gearData.customValues.Find(x => x.id == "multiplier").customValue
+                * GameManager.Instance.GetCustomValueForMultiplyByLevel(gearController.gearData.id)
         );
         gearController.isNotAddTickValue = true;
         tween?.Kill();
@@ -49,7 +52,8 @@ public class SpeedUpGear : MonoBehaviour
                     _coolDown = x;
                     gearController.FillItemIcon(1 - _coolDown);
                 }
-            ).OnStart(() =>
+            )
+            .OnStart(() =>
             {
                 gearController.FillItemIcon(1);
                 gearController.isNotAddTickValue = true;

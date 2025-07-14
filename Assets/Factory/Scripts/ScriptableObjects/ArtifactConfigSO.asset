@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   artifactDatas:
   - artifactId: clam
-    artifactName: The Clam
-    artifactDescription: 
+    artifactName: Clam
+    artifactDescription: Gives coins at an interval.
     artifactLevel: 0
     values:
     - valueName: cooldown
-      value: 10
+      value: 15
     - valueName: gold
       value: 10
     artifactType: 4
@@ -27,16 +27,16 @@ MonoBehaviour:
       artifactType: 0
       artifactFrame: {fileID: 0}
       weight: 0
-    weight: 0
+    weight: 1
   - artifactId: airPump
-    artifactName: The Air Pump
-    artifactDescription: 
+    artifactName: Air Pump
+    artifactDescription: Help fish survive longer by providing more oxygen.
     artifactLevel: 0
     values:
     - valueName: percentDecrease
-      value: 0.9
+      value: 0.5
     - valueName: cooldown
-      value: 5
+      value: 7
     - valueName: duration
       value: 5
     artifactType: 3
@@ -44,23 +44,23 @@ MonoBehaviour:
       artifactType: 0
       artifactFrame: {fileID: 0}
       weight: 0
-    weight: 0
+    weight: 5
   - artifactId: sacredTotem
     artifactName: Sacred Totem
-    artifactDescription: 
+    artifactDescription: Increase gears' speed with mythical power.
     artifactLevel: 0
     values:
     - valueName: percentIncrease
-      value: 1
+      value: 0.5
     artifactType: 2
     artifactTypeData:
       artifactType: 0
       artifactFrame: {fileID: 0}
       weight: 0
-    weight: 0
+    weight: 10
   - artifactId: treasure
-    artifactName: Treasure
-    artifactDescription: 
+    artifactName: Treasure Chest
+    artifactDescription: Ar! Here ya' 30 golds!
     artifactLevel: 0
     values:
     - valueName: value
@@ -70,25 +70,25 @@ MonoBehaviour:
       artifactType: 0
       artifactFrame: {fileID: 0}
       weight: 0
-    weight: 0
+    weight: 100
   - artifactId: bank
-    artifactName: Bank
-    artifactDescription: 
+    artifactName: Shark Bank
+    artifactDescription: Keep the money in the bank to earn interest.
     artifactLevel: 0
     values:
     - valueName: value
       value: 1
     - valueName: mult
-      value: 0.1
+      value: 0.05
     artifactType: 1
     artifactTypeData:
       artifactType: 0
       artifactFrame: {fileID: 0}
       weight: 0
-    weight: 0
+    weight: 30
   - artifactId: fillFull
-    artifactName: The King
-    artifactDescription: 
+    artifactName: Golden Crown
+    artifactDescription: Fill the board with Amplifier level 1.
     artifactLevel: 0
     values:
     - valueName: level
@@ -98,20 +98,20 @@ MonoBehaviour:
       artifactType: 0
       artifactFrame: {fileID: 0}
       weight: 0
-    weight: 0
+    weight: 1
   - artifactId: heartBonus
-    artifactName: HeartBonus
-    artifactDescription: 
+    artifactName: Extra lives!
+    artifactDescription: Receive 3 lives.
     artifactLevel: 0
     values:
     - valueName: value
       value: 3
-    artifactType: 4
+    artifactType: 2
     artifactTypeData:
       artifactType: 0
       artifactFrame: {fileID: 0}
       weight: 0
-    weight: 0
+    weight: 10
   artifactTypeDatas:
   - artifactType: 0
     artifactFrame: {fileID: 21300000, guid: 695315d059c5a44a3ac75d6ff2b303f7, type: 3}

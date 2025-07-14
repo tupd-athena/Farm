@@ -46,6 +46,8 @@ public class SwordfishController : FishController
                 });
             _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
             FishManager.Instance.CheckWinLose();
+
+            InventoryManager.Instance.AddGift(1);
         }
     }
 
@@ -115,7 +117,8 @@ public class SwordfishController : FishController
 
                 // Attack the fish and add it to the attacked list
                 fishController.TakeDamage(
-                    fishController.fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100
+                    fishController.fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100,
+                    transform
                 );
                 Debug.Log("Attack by Swordfish");
                 attackedFishes.Add(fishController);

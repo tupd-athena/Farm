@@ -182,11 +182,11 @@ namespace Factory
             _fishes.Clear();
         }
 
-        public async Task UpdateFishCountText(int count)
+        public async Task UpdateFishCountText()
         {
             // Debug.Log("UpdateFishCountText: " + count);
-            GameManager.Instance.homeUI.UpdateTotalFishText(count);
-            if (count <= 2)
+            GameManager.Instance.homeUI.UpdateTotalFishText(GameManager.Instance.totalHP);
+            if (GameManager.Instance.totalHP <= 2)
             {
                 // _waterMaterial.DOKill();
                 // _waterMaterial
@@ -207,14 +207,7 @@ namespace Factory
                     .SetEase(Ease.OutExpo)
                     .SetLoops(4, LoopType.Yoyo);
                 await Task.Delay(3000);
-                await UpdateFishCountText(
-                    GameManager.Instance.dayConfiguration.maxInPool
-                        + (int)
-                            CustomValueManager.Instance.GetCustomValueInGame(
-                                CustomValueManager.HEART_BONUS
-                            )
-                        - _fishes.FindAll(x => x.state == FishState.Dead).Count
-                );
+                await UpdateFishCountText();
             }
             else
             {
@@ -280,14 +273,7 @@ namespace Factory
 
         public void CheckWinLose()
         {
-            UpdateFishCountText(
-                GameManager.Instance.dayConfiguration.maxInPool
-                    + (int)
-                        CustomValueManager.Instance.GetCustomValueInGame(
-                            CustomValueManager.HEART_BONUS
-                        )
-                    - _fishes.FindAll(x => x.state == FishState.Dead && !x.fishConfig.isBoss).Count
-            );
+            UpdateFishCountText();
             if (
                 _fishes.FindAll(x => x.state == FishState.Dead).Count
                 >= GameManager.Instance.dayConfiguration.maxInPool
@@ -320,13 +306,7 @@ namespace Factory
             GameManager.Instance.homeUI.NotReadyFishAmountText.text = (
                 this.totalFish - _fishes.Count
             ).ToString();
-            UpdateFishCountText(
-                GameManager.Instance.dayConfiguration.maxInPool
-                    + (int)
-                        CustomValueManager.Instance.GetCustomValueInGame(
-                            CustomValueManager.HEART_BONUS
-                        )
-            );
+            UpdateFishCountText();
         }
 
         public void UseDopamine(GearData gearData)

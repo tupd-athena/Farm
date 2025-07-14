@@ -169,10 +169,10 @@ namespace Factory
         public void SetTextGear()
         {
             System.Random random = new System.Random();
-            switch (gearData.itemName)
+            switch (gearData.id)
             {
-                case "Multiplier":
-                    var index = random.Next(0, gearData.customValues.Count);
+                case 5:
+                    var index = 0;
                     var value = gearData.customValues[index].customValue;
                     if (gearData.baseValue != 1)
                     {
@@ -201,17 +201,17 @@ namespace Factory
 
         public void AddSpecialGear(GearData data)
         {
-            if(isInShop)
+            if (isInShop)
             {
                 return;
             }
             DisableAllSpecialComponets();
-            switch (data.itemName)
+            switch (data.id)
             {
-                case "SpeedUP":
+                case 4:
                     gameObject.AddComponent<SpeedUpGear>();
                     break;
-                case "Dopamine":
+                case 6:
                     OnFillComplete += () =>
                     {
                         FishManager.Instance.UseDopamine(gearData);
@@ -226,6 +226,7 @@ namespace Factory
         {
             if (_velocityText != null)
             {
+                Debug.Log("UpdateVelocity: " + value);
                 _velocityText.text = value.ToString("F2") + "/s";
             }
             if (value == 0)
@@ -388,8 +389,8 @@ namespace Factory
             float AmplifierToTick = Amplifier >= gearData.maxValue ? 0 : Amplifier;
             float AmplifierToCost =
                 Amplifier >= gearData.maxValue ? Amplifier - gearData.maxValue : 0;
-            int bonus = (int)(AmplifierToTick / gearData.maxValue);
-            var tickValue = gearData.tickValue + (bonus >= 1 ? 0 : AmplifierToTick);
+            float bonus = (AmplifierToTick / gearData.maxValue);
+            var tickValue = gearData.tickValue + Amplifier;
             tickValue *= Multiplier;
             float multiplier = 1;
             float multiplierBySpeedUp = CustomValueManager.Instance.GetCustomValueInGame(
@@ -442,7 +443,7 @@ namespace Factory
                 );
             if (currentTotalTickValue >= gearData.maxValue)
             {
-                int rotationCount = (int)(currentTotalTickValue / gearData.maxValue) + bonus;
+                int rotationCount = (int)(currentTotalTickValue / gearData.maxValue) + (int)bonus;
                 currentTotalTickValue = currentTotalTickValue % gearData.maxValue;
                 OnFillComplete?.Invoke();
                 StartCoroutine(InvokeRotateWithDelay(rotationCount, AmplifierToCost));
@@ -459,16 +460,19 @@ namespace Factory
             }
         }
 
+        public List<GearController> allConnectedGears1 = new List<GearController>();
+
         public void NeighborRotate()
         {
             List<GearController> allConnectedGears = FindAllConnectedGearsOnBoard();
+            allConnectedGears1 = allConnectedGears;
             direction = (direction + 1) % 4;
             float Amplifier = 0;
             float Multiplier = 1;
 
             foreach (var gear in allConnectedGears)
             {
-                if (gear.gearData.itemName == "Amplifier")
+                if (gear.gearData.id == 0)
                 {
                     if (Amplifier == 0)
                     {
@@ -476,12 +480,14 @@ namespace Factory
                     }
                     Amplifier += ((0.2f * Mathf.Pow(2, gear.gearData.level - 1)));
                 }
-                if (gear.gearData.itemName == "Multiplier")
+                if (gear.gearData.id == 5)
                 {
                     Multiplier += gear.gearData.baseValue - 1;
                 }
             }
-            Amplifier *= GameManager.Instance.GetGearDataByID(0).baseValue;
+            Amplifier *=
+                GameManager.Instance.GetGearDataByID(0).baseValue
+                * GameManager.Instance.GetCustomValueForMultiplyByLevel(0);
             var countGearConnectedHeadGear = 0;
             foreach (var ConnectedGear in allConnectedGears)
             {
@@ -524,7 +530,13 @@ namespace Factory
             }
             if (gears.Count != 0)
             {
-                allGears.AddRange(gears);
+                foreach (var item in gears)
+                {
+                    if (!allGears.Contains(item))
+                    {
+                        allGears.Add(item);
+                    }
+                }
                 allGears = FindAllConnectedGearsOnBoard(allGears);
             }
             return allGears;
@@ -538,6 +550,10 @@ namespace Factory
                 if (gear.gear.isActive && !gear.gear.isHead && gear.direction == direction)
                 {
                     gear.gear.isReverse = !isReverse;
+                    if (gears.Contains(gear.gear))
+                    {
+                        continue;
+                    }
                     gears.Add(gear.gear);
                 }
             }

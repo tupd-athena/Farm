@@ -53,6 +53,7 @@ namespace Factory
         public FishState state = FishState.Idle;
         public FishConfig fishConfig;
         public float currentTotalTickValue = 0;
+        public float totalTickValue = 0;
 
         public RectTransform _confuseVFX;
         public Transform _immortalVFX;
@@ -78,6 +79,7 @@ namespace Factory
 
         public ParticleSystem heartVFX;
         public ParticleSystem cloverVFX;
+        public ParticleSystem hitVFX;
         public Color32 originalColor;
 
         public void Awake()
@@ -121,6 +123,7 @@ namespace Factory
             targetPosition = transform.position;
             Move();
             Debug.Log("Init: " + fishConfig.fishPrefabName);
+            totalTickValue = fishConfig.fishCurrencyValue;
             currentTotalTickValue = fishConfig.fishCurrencyValue * 0.5f;
             _spriteRenderer.material.SetFloat("_SwaySpeed", 1);
             _spriteRenderer.material.SetColor("_Color", new Color32(255, 255, 255, 255));
@@ -173,13 +176,44 @@ namespace Factory
             }
         }
 
-        public void TakeDamage(float damage)
+        private void ApplyKnockback(Transform attackerTransform)
+        {
+            // Calculate vertical knockback direction based on attacker position
+            float verticalDirection = transform.position.y > attackerTransform.position.y ? 1f : -1f;
+            Vector3 knockbackDirection = new Vector3(0, verticalDirection, 0);
+            float knockbackForce = 0.5f; // Adjust this value to control knockback distance
+            float knockbackDuration = 0.15f; // Adjust this value to control knockback speed
+
+            // Store current position and calculate knockback position
+            Vector3 currentPos = transform.position;
+            Vector3 knockbackPos = currentPos + knockbackDirection * knockbackForce;
+            _moveTween.Kill();
+            _moveTween = null;
+            // Apply knockback animation
+            transform.DOComplete(); // Stop any existing movement
+            transform
+                .DOMove(knockbackPos, knockbackDuration * 0.5f)
+                .SetEase(Ease.OutQuad)
+                .OnComplete(() =>
+                {
+                    Move(); // Resume movement after knockback
+                });
+        }
+
+        public void TakeDamage(float damage, Transform attacker = null)
         {
             if (tempImmortal || state == FishState.Dead || fishConfig.isBoss)
             {
                 return;
             }
             currentTotalTickValue -= damage;
+
+            // Add knockback effect if attacker is provided
+            if (attacker != null)
+            {
+                ApplyKnockback(attacker);
+            }
+            hitVFX.Play();
             _spriteRenderer.material.DOComplete();
             _spriteRenderer
                 .material.DOColor(new Color32(255, 125, 125, 255), 0.1f)
@@ -191,19 +225,7 @@ namespace Factory
             UpdateHpBar();
             if (currentTotalTickValue <= 0)
             {
-                state = FishState.Dead;
-                _moveTween.Kill();
-                FlipWithDirection(new Vector3(-1, -1, 1));
-                _hpBarMask.gameObject.SetActive(false);
-                _spriteRenderer.material.DOFade(0, 3f);
-                transform
-                    .DOLocalMoveY(-1f, 3f)
-                    .OnComplete(() =>
-                    {
-                        gameObject.SetActive(false);
-                    });
-                _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
-                FishManager.Instance.CheckWinLose();
+                Die();
             }
         }
 
@@ -211,15 +233,6 @@ namespace Factory
         {
             if (!tempImmortal)
             {
-                Debug.Log(
-                    "DecreaseHPByTime: "
-                        + (
-                            1
-                            - CustomValueManager.Instance.GetCustomValueInGame(
-                                CustomValueManager.REDUCE_FISH_TICK_RATE
-                            )
-                        )
-                );
                 currentTotalTickValue -=
                     fishConfig.fishCurrencyValue
                     * (
@@ -237,25 +250,31 @@ namespace Factory
             UpdateHpBar();
             if (currentTotalTickValue < 0)
             {
-                state = FishState.Dead;
-                _moveTween.Kill();
-                FlipWithDirection(new Vector3(-1, -1, 1));
-                _hpBarMask.gameObject.SetActive(false);
-                _spriteRenderer.material.DOFade(0, 3f);
-                transform
-                    .DOLocalMoveY(-1f, 3f)
-                    .OnComplete(() =>
-                    {
-                        gameObject.SetActive(false);
-                    });
-                _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
-                FishManager.Instance.CheckWinLose();
+                Die();
             }
             if (state == FishState.Dead || fishConfig.isBoss)
             {
                 return;
             }
             Invoke(nameof(DecreaseHPByTime), 1f);
+        }
+
+        public void Die()
+        {
+            state = FishState.Dead;
+            _moveTween.Kill();
+            FlipWithDirection(new Vector3(-1, -1, 1));
+            _hpBarMask.gameObject.SetActive(false);
+            _spriteRenderer.material.DOFade(0, 3f);
+            transform
+                .DOLocalMoveY(-1f, 3f)
+                .OnComplete(() =>
+                {
+                    gameObject.SetActive(false);
+                });
+            _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
+            FishManager.Instance.CheckWinLose();
+            GameManager.Instance.totalHP--;
         }
 
         public virtual async Task FindTarget()
@@ -347,7 +366,9 @@ namespace Factory
             {
                 return;
             }
-            currentTotalTickValue += item.itemData.cost;
+            currentTotalTickValue +=
+                item.itemData.cost
+                * GameManager.Instance.GetCustomValueForMultiplyByLevel(item.itemData.gearId);
             AudioManager.Instance.PlaySound("Eat");
             UpdateHpBar();
             CheckFull();
@@ -371,7 +392,9 @@ namespace Factory
             {
                 return;
             }
-            var duration = gearData.customValues.Find(x => x.id == "Duration").customValue;
+            var duration =
+                gearData.customValues.Find(x => x.id == "Duration").customValue
+                * GameManager.Instance.GetCustomValueForMultiplyByLevel(gearData.id);
             var main = _immortalVFX.GetComponent<ParticleSystem>().main;
             if (main.duration != Mathf.Max(duration - 0.5f, 0.5f))
             {

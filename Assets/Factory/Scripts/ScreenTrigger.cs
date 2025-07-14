@@ -12,6 +12,14 @@ public class ScreenTrigger : MonoBehaviour
     private Camera _uiCamera;
     private RectTransform _canvasRect;
 
+    [Header("Fish Knockback Settings")]
+    public float knockbackRadius = 2f;
+    public LayerMask fishLayerMask = -1; // Default to all layers
+
+    // For debugging - shows the knockback radius in the scene view
+    private Vector3 lastHandPosition;
+    private bool showDebugRadius = false;
+
     private void Start()
     {
         _uiCamera = UIManager.Instance.CameraUI;
@@ -63,6 +71,9 @@ public class ScreenTrigger : MonoBehaviour
             out localPoint
         );
 
+        // Check for nearby fish and apply knockback
+        CheckAndKnockbackNearbyFish(worldPosition);
+
         SpawnParticle(localPoint);
     }
 
@@ -88,6 +99,65 @@ public class ScreenTrigger : MonoBehaviour
                     particle.SetActive(false);
                 }
             );
+        }
+    }
+
+    private void CheckAndKnockbackNearbyFish(Vector3 handWorldPosition)
+    {
+        // Store for debug visualization
+        lastHandPosition = handWorldPosition;
+        showDebugRadius = true;
+
+        // Only check for fish if FishManager exists and has fish
+        if (FishManager.Instance == null || FishManager.Instance._fishes == null)
+            return;
+
+        // Create a temporary GameObject to represent the hand position for knockback calculation
+        GameObject handPosition = new GameObject("TempHandPosition");
+        handPosition.transform.position = handWorldPosition;
+
+        try
+        {
+            // Use Physics2D.OverlapCircleAll to find all fish within knockback radius
+            Collider2D[] nearbyColliders = Physics2D.OverlapCircleAll(
+                handWorldPosition,
+                knockbackRadius,
+                fishLayerMask
+            );
+
+            int fishKnockedBack = 0;
+
+            foreach (Collider2D collider in nearbyColliders)
+            {
+                // Check if the collider has a FishController component
+                ItemController itemController = collider.GetComponent<ItemController>();
+                if (itemController != null)
+                {
+                    // itemController.ApplyKnockback(handPosition.transform);
+                }
+            }
+
+            if (fishKnockedBack > 0)
+            {
+                Debug.Log($"Knocked back {fishKnockedBack} fish at position {handWorldPosition}");
+            }
+        }
+        finally
+        {
+            // Clean up the temporary GameObject
+            DestroyImmediate(handPosition);
+
+            // Hide debug radius after a short delay
+            DOVirtual.DelayedCall(0.5f, () => showDebugRadius = false);
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (showDebugRadius)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(lastHandPosition, knockbackRadius);
         }
     }
 }

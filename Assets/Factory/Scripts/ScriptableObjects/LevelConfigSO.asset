@@ -14,14 +14,90 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelConfigs:
   - levelNumber: 0
-    maxTotalFishHP: 5
-    maxCoinDrop: 250
+    maxTotalFishHP: 3
+    maxCoinDrop: 15
     gridSize: {x: 6, y: 4}
     maxHeadGearSlots: 1
-    initialLevelCurrency: 240
+    initialLevelCurrency: 24
+  fixedDayConfigurations:
+  - dayNumber: 0
+    numberOfFishes: 3
+    fishConfigs:
+    - fishType: 0
+      amount: 3
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 5
+  - dayNumber: 0
+    numberOfFishes: 3
+    fishConfigs:
+    - fishType: 0
+      amount: 3
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 1
+  - dayNumber: 0
+    numberOfFishes: 5
+    fishConfigs:
+    - fishType: 0
+      amount: 5
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 1
   normalDayConfigurations:
   - dayNumber: 0
-    numberOfFishes: 6
+    numberOfFishes: 16
     fishConfigs:
     - fishType: 0
       amount: 3
@@ -47,9 +123,47 @@ MonoBehaviour:
       fishConfig:
         fishType: 1
         weight: 2
-        fishCurrencyValue: 0
+        fishCurrencyValue: 1
         patienceValue: 3
+        dropCoinValue: 2
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 9fa6553076835499abf856d24a17c8fb, type: 3}
+        speed: 0.8
+        size: 1
+        depth: -3
+        moveArea: 1
+    - fishType: 0
+      amount: 5
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
         dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    - fishType: 1
+      amount: 5
+      fishConfig:
+        fishType: 1
+        weight: 2
+        fishCurrencyValue: 1
+        patienceValue: 3
+        dropCoinValue: 2
         percentDecrease: 1
         timeDecreasePerTick: 0
         fishPrefabName: Fish
@@ -63,9 +177,9 @@ MonoBehaviour:
         moveArea: 1
     initialDayCurrency: 0
     percentOutputCash: 0
-    maxInPool: 5
+    maxInPool: 1
   - dayNumber: 0
-    numberOfFishes: 5
+    numberOfFishes: 10
     fishConfigs:
     - fishType: 0
       amount: 5
@@ -86,15 +200,438 @@ MonoBehaviour:
         size: 1
         depth: -2
         moveArea: 1
+    - fishType: 1
+      amount: 5
+      fishConfig:
+        fishType: 1
+        weight: 2
+        fishCurrencyValue: 1
+        patienceValue: 3
+        dropCoinValue: 2
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 9fa6553076835499abf856d24a17c8fb, type: 3}
+        speed: 0.8
+        size: 1
+        depth: -3
+        moveArea: 1
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 1
+  - dayNumber: 0
+    numberOfFishes: 23
+    fishConfigs:
+    - fishType: 5
+      amount: 5
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 0
+      amount: 3
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    - fishType: 5
+      amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 1
+      amount: 5
+      fishConfig:
+        fishType: 1
+        weight: 2
+        fishCurrencyValue: 1
+        patienceValue: 3
+        dropCoinValue: 2
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 9fa6553076835499abf856d24a17c8fb, type: 3}
+        speed: 0.8
+        size: 1
+        depth: -3
+        moveArea: 1
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 1
+  - dayNumber: 0
+    numberOfFishes: 16
+    fishConfigs:
+    - fishType: 0
+      amount: 4
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    - fishType: 5
+      amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 0
+      amount: 2
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 1
+  bossDayConfigurations:
+  - dayNumber: 0
+    numberOfFishes: 26
+    fishConfigs:
+    - fishType: 5
+      amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 7
+      amount: 1
+      fishConfig:
+        fishType: 7
+        weight: 0
+        fishCurrencyValue: 1
+        patienceValue: 3
+        dropCoinValue: 1
+        percentDecrease: 30
+        timeDecreasePerTick: 0
+        fishPrefabName: Swordfish
+        isBoss: 1
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: f656151c4167648bb8c8fab34da1f04a, type: 3}
+        speed: 5
+        size: 1
+        depth: -3
+        moveArea: 2
+    - fishType: 5
+      amount: 5
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 0
+      amount: 5
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    - fishType: 3
+      amount: 5
+      fishConfig:
+        fishType: 3
+        weight: 5
+        fishCurrencyValue: 1
+        patienceValue: 5
+        dropCoinValue: 3
+        percentDecrease: 0.5
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 82878a5dac3b64ef78c04cd4c550c9b4, type: 3}
+        speed: 0.7
+        size: 1
+        depth: -5
+        moveArea: 0.49
     initialDayCurrency: 0
     percentOutputCash: 0
     maxInPool: 5
-  bossDayConfigurations:
   - dayNumber: 0
-    numberOfFishes: 11
+    numberOfFishes: 30
     fishConfigs:
-    - fishType: 0
+    - fishType: 5
       amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 0
+      amount: 3
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    - fishType: 6
+      amount: 1
+      fishConfig:
+        fishType: 6
+        weight: 0
+        fishCurrencyValue: 1
+        patienceValue: 3
+        dropCoinValue: 1
+        percentDecrease: 5
+        timeDecreasePerTick: 0
+        fishPrefabName: Squid
+        isBoss: 1
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 185ef8fdbe086428985af004bf85eca4, type: 3}
+        speed: 1
+        size: 1
+        depth: -3
+        moveArea: 2
+    - fishType: 0
+      amount: 5
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    - fishType: 3
+      amount: 2
+      fishConfig:
+        fishType: 3
+        weight: 5
+        fishCurrencyValue: 1
+        patienceValue: 5
+        dropCoinValue: 3
+        percentDecrease: 0.5
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 82878a5dac3b64ef78c04cd4c550c9b4, type: 3}
+        speed: 0.7
+        size: 1
+        depth: -5
+        moveArea: 0.49
+    - fishType: 6
+      amount: 1
+      fishConfig:
+        fishType: 6
+        weight: 0
+        fishCurrencyValue: 1
+        patienceValue: 3
+        dropCoinValue: 1
+        percentDecrease: 5
+        timeDecreasePerTick: 0
+        fishPrefabName: Squid
+        isBoss: 1
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 185ef8fdbe086428985af004bf85eca4, type: 3}
+        speed: 1
+        size: 1
+        depth: -3
+        moveArea: 2
+    - fishType: 5
+      amount: 8
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 5
+  - dayNumber: 0
+    numberOfFishes: 30
+    fishConfigs:
+    - fishType: 5
+      amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 0
+      amount: 3
       fishConfig:
         fishType: 0
         weight: 1
@@ -117,9 +654,9 @@ MonoBehaviour:
       fishConfig:
         fishType: 7
         weight: 0
-        fishCurrencyValue: 0
+        fishCurrencyValue: 1
         patienceValue: 3
-        dropCoinValue: 0
+        dropCoinValue: 1
         percentDecrease: 30
         timeDecreasePerTick: 0
         fishPrefabName: Swordfish
@@ -127,19 +664,12 @@ MonoBehaviour:
         sprites:
         - percentHP: 100
           sprite: {fileID: 21300000, guid: f656151c4167648bb8c8fab34da1f04a, type: 3}
-        speed: 1
+        speed: 5
         size: 1
         depth: -3
         moveArea: 2
-    initialDayCurrency: 0
-    percentOutputCash: 0
-    maxInPool: 5
-  specialDayConfigurations:
-  - dayNumber: 0
-    numberOfFishes: 30
-    fishConfigs:
     - fishType: 0
-      amount: 30
+      amount: 5
       fishConfig:
         fishType: 0
         weight: 1
@@ -157,7 +687,254 @@ MonoBehaviour:
         size: 1
         depth: -2
         moveArea: 1
+    - fishType: 3
+      amount: 2
+      fishConfig:
+        fishType: 3
+        weight: 5
+        fishCurrencyValue: 1
+        patienceValue: 5
+        dropCoinValue: 3
+        percentDecrease: 0.5
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 82878a5dac3b64ef78c04cd4c550c9b4, type: 3}
+        speed: 0.7
+        size: 1
+        depth: -5
+        moveArea: 0.49
+    - fishType: 6
+      amount: 1
+      fishConfig:
+        fishType: 6
+        weight: 0
+        fishCurrencyValue: 1
+        patienceValue: 3
+        dropCoinValue: 1
+        percentDecrease: 5
+        timeDecreasePerTick: 0
+        fishPrefabName: Squid
+        isBoss: 1
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 185ef8fdbe086428985af004bf85eca4, type: 3}
+        speed: 1
+        size: 1
+        depth: -3
+        moveArea: 2
+    - fishType: 5
+      amount: 8
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
     initialDayCurrency: 0
     percentOutputCash: 0
     maxInPool: 5
+  specialDayConfigurations:
+  - dayNumber: 0
+    numberOfFishes: 16
+    fishConfigs:
+    - fishType: 0
+      amount: 5
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    - fishType: 5
+      amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 6
+      amount: 1
+      fishConfig:
+        fishType: 6
+        weight: 0
+        fishCurrencyValue: 1
+        patienceValue: 3
+        dropCoinValue: 1
+        percentDecrease: 5
+        timeDecreasePerTick: 0
+        fishPrefabName: Squid
+        isBoss: 1
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 185ef8fdbe086428985af004bf85eca4, type: 3}
+        speed: 1
+        size: 1
+        depth: -3
+        moveArea: 2
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 1
+  - dayNumber: 0
+    numberOfFishes: 23
+    fishConfigs:
+    - fishType: 5
+      amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    - fishType: 2
+      amount: 3
+      fishConfig:
+        fishType: 2
+        weight: 3
+        fishCurrencyValue: 1
+        patienceValue: 4
+        dropCoinValue: 4
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 663dee80fad1140b98be31d320c32493, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -4
+        moveArea: 0.7
+    - fishType: 5
+      amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 1
+  - dayNumber: 0
+    numberOfFishes: 15
+    fishConfigs:
+    - fishType: 0
+      amount: 2
+      fishConfig:
+        fishType: 0
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 2
+        dropCoinValue: 1
+        percentDecrease: 2
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: ddef03920a28e4a8ab346c5de2de91df, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -2
+        moveArea: 1
+    - fishType: 2
+      amount: 3
+      fishConfig:
+        fishType: 2
+        weight: 3
+        fishCurrencyValue: 1
+        patienceValue: 4
+        dropCoinValue: 4
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 663dee80fad1140b98be31d320c32493, type: 3}
+        speed: 1.2
+        size: 1
+        depth: -4
+        moveArea: 0.7
+    - fishType: 5
+      amount: 10
+      fishConfig:
+        fishType: 5
+        weight: 1
+        fishCurrencyValue: 1
+        patienceValue: 1
+        dropCoinValue: 1
+        percentDecrease: 1
+        timeDecreasePerTick: 0
+        fishPrefabName: Fish
+        isBoss: 0
+        sprites:
+        - percentHP: 100
+          sprite: {fileID: 21300000, guid: 0376cadbb38974803958993244e9940a, type: 3}
+        speed: 1.5
+        size: 1
+        depth: -3
+        moveArea: 2.5
+    initialDayCurrency: 0
+    percentOutputCash: 0
+    maxInPool: 1
   fishConfigSO: {fileID: 11400000, guid: f3d3464ef6d7c481c9153a792cb42525, type: 2}

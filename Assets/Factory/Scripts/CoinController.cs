@@ -10,6 +10,10 @@ namespace Factory
         public int value;
 
         public bool isCollected = false;
+        public System.Action OnCollect;
+        public bool canClick = true;
+
+        public ParticleSystem sparkleEffect;
 
         public void Awake()
         {
@@ -31,11 +35,12 @@ namespace Factory
 
         public void OnClick()
         {
-            if (isCollected || gameObject.activeSelf == false)
+            if (isCollected || gameObject.activeSelf == false || !canClick)
                 return;
             CancelInvoke("OnClick");
             isCollected = true;
             transform.DOComplete();
+            OnCollect?.Invoke();
             transform
                 .DOMove(GameManager.Instance.homeUI.TotalGoldText.transform.position, 0.5f)
                 .SetEase(Ease.OutSine)

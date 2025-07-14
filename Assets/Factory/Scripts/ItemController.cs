@@ -12,6 +12,8 @@ namespace Factory
         public bool mergeable = false;
         public bool isCollected = false;
 
+        public GameObject crabObject;
+
         public Rigidbody2D rb;
 
         [SerializeField]
@@ -68,6 +70,7 @@ namespace Factory
             mergeable = false;
             dropCompleted = false;
             isInWater = false;
+            existTime = 0;
 
             rb = GetComponent<Rigidbody2D>();
 
@@ -86,12 +89,14 @@ namespace Factory
             _itemIcon.gameObject.SetActive(true);
             // SetGravityInAir();
             OnDropToSurface = null;
+            crabObject.SetActive(false);
             OnSpawn = null;
         }
 
         void OnDisable()
         {
             KillAllTweens();
+            existTime = 0;
             // Clear the list of objects to destroy
             foreach (var obj in _objectsToDestroy)
             {
@@ -125,9 +130,12 @@ namespace Factory
             // Kill any existing move tween
             moveTween?.Kill();
             transform
-                .DORotate(new Vector3(0, 0, 90), 4f, RotateMode.LocalAxisAdd)
-                .SetEase(Ease.Linear)
-                .SetLoops(-1, LoopType.Yoyo);
+                .DORotate(
+                    new Vector3(0, 0, 360),
+                    15f / itemData.dropSpeed,
+                    RotateMode.FastBeyond360
+                )
+                .SetEase(Ease.Linear);
             DOVirtual.DelayedCall(
                 1f,
                 () =>
@@ -154,15 +162,45 @@ namespace Factory
         {
             moveTween = null;
             transform
-                .DOMoveY(GameManager.Instance.GetBottomYWithOffset(), 15f / itemData.dropSpeed)
+                .DOMoveY(GameManager.Instance.GetBottomYWithOffset(0.3f), 15f / itemData.dropSpeed)
                 .OnComplete(async () =>
                 {
-                    var delayTask = Task.Delay(1000);
-                    _asyncTasks.Add(delayTask);
-                    await delayTask;
                     var collectTask = CollectItem();
                     _asyncTasks.Add(collectTask);
                     await collectTask;
+                });
+        }
+
+        public void ApplyKnockback(Transform attackerTransform)
+        {
+            // Calculate vertical knockback direction based on attacker position
+            float verticalDirection =
+                transform.position.y > attackerTransform.position.y ? 1f : -1f;
+            Vector3 knockbackDirection = new Vector3(0, verticalDirection, 0);
+            float knockbackForce = 0.5f; // Adjust this value to control knockback distance
+            float knockbackDuration = 0.15f; // Adjust this value to control knockback speed
+
+            // Store current position and calculate knockback position
+            Vector3 currentPos = transform.position;
+            Vector3 knockbackPos = currentPos + knockbackDirection * knockbackForce;
+            // Apply knockback animation
+            moveTween?.Kill();
+            moveTween = null;
+            transform.DOKill(); // Stop any existing movement
+            transform
+                .DOMove(knockbackPos, knockbackDuration * 0.5f)
+                .SetEase(Ease.OutQuad)
+                .OnComplete(() =>
+                {
+                    transform.DOMoveY(
+                        GameManager.Instance.GetBottomYWithOffset(.3f),
+                        15f
+                            * (
+                                transform.position.y
+                                / GameManager.Instance.GetBottomYWithOffset(.3f)
+                            )
+                            / itemData.dropSpeed
+                    );
                 });
         }
 
@@ -172,29 +210,15 @@ namespace Factory
 
             // Create the zigzag sequence
             moveTween = transform
-                .DOMoveY(GameManager.Instance.GetBottomYWithOffset(), 15f / itemData.dropSpeed)
+                .DOMoveY(GameManager.Instance.GetBottomYWithOffset(.3f), 15f / itemData.dropSpeed)
                 .OnComplete(async () =>
                 {
-                    var delayTask = Task.Delay(1000);
-                    _asyncTasks.Add(delayTask);
-                    await delayTask;
                     var collectTask = CollectItem();
                     _asyncTasks.Add(collectTask);
                     await collectTask;
                 });
             for (int i = 0; i < 5; i++)
             {
-                if (transform.localPosition.y <= GameManager.Instance.GetBottomYWithOffset() * 0.8f)
-                {
-                    moveTween.Kill();
-                    var delayTask = Task.Delay(1000);
-                    _asyncTasks.Add(delayTask);
-                    await delayTask;
-                    var collectTask = CollectItem();
-                    _asyncTasks.Add(collectTask);
-                    await collectTask;
-                    return;
-                }
                 var moveTask = transform
                     .DOLocalMoveX(transform.localPosition.x + (moveLeft ? -0.5f : 0.5f), 1.5f)
                     .SetLoops(2, LoopType.Yoyo)
@@ -207,21 +231,28 @@ namespace Factory
 
         public async Task CollectItem()
         {
-            if (isCollected)
+            existTime = 0;
+            if (
+                isCollected
+                || !isInWater
+                || transform.position.y > GameManager.Instance.GetBottomYWithOffset() + 2
+            )
             {
+                crabObject.SetActive(false);
                 return;
             }
-            var delayTask = Task.Delay(2000);
-            _asyncTasks.Add(delayTask);
-            await delayTask;
+
             if (isCollected)
             {
                 return;
             }
             isCollected = true;
+            crabObject.SetActive(true);
+            crabObject.GetComponent<Animator>().Play("Crab_Action");
             var fadeTask = _itemIcon.DOFade(0, 1f).AsyncWaitForCompletion();
             _asyncTasks.Add(fadeTask);
             await fadeTask;
+            await Task.Delay(700);
             GameManager.Instance.CollectItem(this);
         }
 
@@ -393,23 +424,23 @@ namespace Factory
         public void Clear()
         {
             // Clear the list of objects to destroy
-            if(GetComponent<HomingBait>() != null)
+            if (GetComponent<HomingBait>() != null)
             {
                 Destroy(GetComponent<HomingBait>());
             }
-            if(GetComponent<HeartBait>() != null)
+            if (GetComponent<HeartBait>() != null)
             {
                 Destroy(GetComponent<HeartBait>());
             }
-            if(GetComponent<TheTwinFood>() != null)
+            if (GetComponent<TheTwinFood>() != null)
             {
                 Destroy(GetComponent<TheTwinFood>());
             }
-            if(GetComponent<TheTrippleFood>() != null)
+            if (GetComponent<TheTrippleFood>() != null)
             {
                 Destroy(GetComponent<TheTrippleFood>());
             }
-            
+
             foreach (var obj in _objectsToDestroy)
             {
                 if (obj != null)

@@ -44,6 +44,7 @@ public class SquidController : FishController
                 });
             _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
             FishManager.Instance.CheckWinLose();
+            InventoryManager.Instance.AddGift(1);
         }
     }
 
