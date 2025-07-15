@@ -274,10 +274,7 @@ namespace Factory
         public void CheckWinLose()
         {
             UpdateFishCountText();
-            if (
-                _fishes.FindAll(x => x.state == FishState.Dead).Count
-                >= GameManager.Instance.dayConfiguration.maxInPool
-            )
+            if (GameManager.Instance.totalHP <= 0)
             {
                 Debug.Log("Lose");
                 GameManager.Instance.ShowLosePanel();

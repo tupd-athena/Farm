@@ -123,7 +123,7 @@ namespace Factory
             targetPosition = transform.position;
             Move();
             Debug.Log("Init: " + fishConfig.fishPrefabName);
-            totalTickValue = fishConfig.fishCurrencyValue;
+            totalTickValue = fishConfig.percentDecrease * GameManager.Instance.ComputeTotalFishHP();
             currentTotalTickValue = fishConfig.fishCurrencyValue * 0.5f;
             _spriteRenderer.material.SetFloat("_SwaySpeed", 1);
             _spriteRenderer.material.SetColor("_Color", new Color32(255, 255, 255, 255));

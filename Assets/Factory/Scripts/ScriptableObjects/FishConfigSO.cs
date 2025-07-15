@@ -96,6 +96,8 @@ namespace Factory
         public float percentDecrease = 0;
         public float timeDecreasePerTick = 0;
 
+        public float percentHP = 1;
+
         public string fishPrefabName;
 
         public bool isBoss = false;
@@ -127,6 +129,7 @@ namespace Factory
             isBoss = other.isBoss;
             speed = other.speed;
             size = other.size;
+            percentHP = other.percentHP;
         }
     }
 }

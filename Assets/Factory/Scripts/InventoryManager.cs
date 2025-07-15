@@ -565,6 +565,7 @@ public class InventoryManager : MonoBehaviour
         System.Random random = new System.Random();
         List<InventoryItemData> rewardItems = new List<InventoryItemData>();
         int cardAmount = random.Next(0, inventoryData.giftAmount); // Randomly choose between 1 and 10 cards
+        Debug.Log($"Showing {cardAmount} reward cards of {inventoryData.giftAmount} total gifts");
         if (inventoryData != null)
         {
             // Check if there are any items with level > 1 and current stack > 0
@@ -592,21 +593,14 @@ public class InventoryManager : MonoBehaviour
             }
             else
             {
-                if (GameManager.Instance.currentDay != 0)
+                for (int i = 0; i < cardAmount; i++)
                 {
-                    for (int i = 0; i < cardAmount; i++)
+                    int randomIndex = random.Next(inventoryData.items.Count);
+                    InventoryItemData itemData = inventoryData.items[randomIndex];
+                    if (!rewardItems.Exists(item => item.id == itemData.id))
                     {
-                        int randomIndex = random.Next(inventoryData.items.Count);
-                        InventoryItemData itemData = inventoryData.items[randomIndex];
-                        if (!rewardItems.Exists(item => item.id == itemData.id))
-                        {
-                            rewardItems.Add(itemData);
-                        }
+                        rewardItems.Add(itemData);
                     }
-                }
-                else
-                {
-                    rewardItems = new List<InventoryItemData>();
                 }
             }
         }
@@ -636,8 +630,9 @@ public class InventoryManager : MonoBehaviour
                 SaveInventory();
             }
         }
-        int randomCoin = inventoryData.giftAmount - rewardItems.Count;
-        if (randomCoin == 0 && rewardItems.Count == 0)
+        int randomCoin = inventoryData.giftAmount;
+        Debug.Log($"Random coins to spawn: {randomCoin} while {inventoryData.giftAmount} cards exist");
+        if (randomCoin <= 0 && inventoryItemCards.Count == 0)
         {
             ShowTopPopup();
             return; // No coins if no items to show
