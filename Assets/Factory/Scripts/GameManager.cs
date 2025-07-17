@@ -252,7 +252,8 @@ namespace Factory
         public long ComputeTotalFishHP()
         {
             sumOfFishesHealth =
-                _currentLevelConfig.maxTotalFishHP * (1 + (long)(0.5 * Mathf.Pow(2, currentDay)));
+                _currentLevelConfig.maxTotalFishHP
+                * (1 + (long)(_levelConfigSO.scaleTotalHP * Mathf.Pow(2, currentDay)));
             return _currentLevelConfig.maxTotalFishHP
                 * (1 + (long)(0.2f * Mathf.Pow(1, currentDay)));
         }
@@ -261,7 +262,7 @@ namespace Factory
         {
             return (int)(
                 _currentLevelConfig.maxCoinDrop
-                * (float)Mathf.Clamp(Mathf.Pow(1.05f, currentDay), 1, 5)
+                * (float)Mathf.Clamp(Mathf.Pow(_levelConfigSO.scaleTotalHP, currentDay), 1, 5)
             );
         }
 

@@ -8,6 +8,8 @@ namespace Factory
     [CreateAssetMenu(fileName = "LevelConfigSO", menuName = "Factory/LevelConfigSO")]
     public class LevelConfigSO : ScriptableObject
     {
+        public float scaleTotalHP = 1f;
+        public float scaleCoinDrop = 1f;
         public List<LevelConfiguration> levelConfigs;
         public List<DayConfiguration> fixedDayConfigurations;
         public List<DayConfiguration> normalDayConfigurations;
