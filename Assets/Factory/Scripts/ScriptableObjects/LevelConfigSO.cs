@@ -30,7 +30,7 @@ namespace Factory
                     totalFishes += fish.amount;
                 }
                 day.numberOfFishes = totalFishes;
-                day.maxInPool = Mathf.Max(1, day.maxInPool);
+                day.maxInPool = Mathf.Max(0, day.maxInPool);
             }
             foreach (var day in normalDayConfigurations)
             {
@@ -43,7 +43,7 @@ namespace Factory
                     totalFishes += fish.amount;
                 }
                 day.numberOfFishes = totalFishes;
-                day.maxInPool = Mathf.Max(1, day.maxInPool);
+                day.maxInPool = Mathf.Max(0, day.maxInPool);
             }
             foreach (var day in bossDayConfigurations)
             {
@@ -56,7 +56,7 @@ namespace Factory
                     totalFishes += fish.amount;
                 }
                 day.numberOfFishes = totalFishes;
-                day.maxInPool = Mathf.Max(1, day.maxInPool);
+                day.maxInPool = Mathf.Max(0, day.maxInPool);
             }
             foreach (var day in specialDayConfigurations)
             {
@@ -69,7 +69,7 @@ namespace Factory
                     totalFishes += fish.amount;
                 }
                 day.numberOfFishes = totalFishes;
-                day.maxInPool = Mathf.Max(1, day.maxInPool);
+                day.maxInPool = Mathf.Max(0, day.maxInPool);
             }
         }
 
