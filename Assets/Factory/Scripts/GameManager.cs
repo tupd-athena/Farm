@@ -252,7 +252,7 @@ namespace Factory
         public long ComputeTotalFishHP()
         {
             sumOfFishesHealth =
-                _currentLevelConfig.maxTotalFishHP * (1 + (long)(0.2f * Mathf.Pow(2, currentDay)));
+                _currentLevelConfig.maxTotalFishHP * (1 + (long)(0.5 * Mathf.Pow(2, currentDay)));
             return _currentLevelConfig.maxTotalFishHP
                 * (1 + (long)(0.2f * Mathf.Pow(1, currentDay)));
         }
