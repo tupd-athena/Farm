@@ -179,7 +179,8 @@ namespace Factory
         private void ApplyKnockback(Transform attackerTransform)
         {
             // Calculate vertical knockback direction based on attacker position
-            float verticalDirection = transform.position.y > attackerTransform.position.y ? 1f : -1f;
+            float verticalDirection =
+                transform.position.y > attackerTransform.position.y ? 1f : -1f;
             Vector3 knockbackDirection = new Vector3(0, verticalDirection, 0);
             float knockbackForce = 0.5f; // Adjust this value to control knockback distance
             float knockbackDuration = 0.15f; // Adjust this value to control knockback speed
@@ -439,6 +440,20 @@ namespace Factory
                 coin.SetActive(true);
                 coin.GetComponent<CoinController>().value = fishConfig.dropCoinValue;
                 coin.GetComponent<CoinController>().Active();
+                coin.GetComponent<CoinController>().OnComplete = () =>
+                {
+                    coin.GetComponent<CoinController>().value += (int)
+                        CustomValueManager.Instance.GetCustomValueInGame(
+                            CustomValueManager.FISH_GOLD_BONUS
+                        );
+                    FishManager.Instance.SpawnTextFloating(
+                        coin.GetComponent<CoinController>().value.ToString(),
+                        transform.position
+                    );
+                    GameManager.Instance.AddGold(coin.GetComponent<CoinController>().value);
+                    PoolSystem.Instance.ReturnObject(gameObject, "Coin");
+                    AudioManager.Instance.PlaySound("Coin");
+                };
 
                 CancelInvoke(nameof(DecreaseHPByTime));
                 FishManager.Instance.CheckWinLose();

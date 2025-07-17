@@ -36,6 +36,8 @@ MonoBehaviour:
       customValue: 1
     - id: mult
       customValue: 0.5
+    - id: breakChance
+      customValue: 0.5
   - id: 1
     itemName: Normal Food
     iconName: F1

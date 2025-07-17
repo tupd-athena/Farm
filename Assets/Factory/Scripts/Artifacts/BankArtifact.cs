@@ -35,7 +35,7 @@ public class BankArtifact : MonoBehaviour
 
     public void Click()
     {
-        if(!isClickable)
+        if (!isClickable)
         {
             Debug.Log("BankArtifact is not clickable or already hidden.");
             return;
@@ -56,6 +56,17 @@ public class BankArtifact : MonoBehaviour
 
             coin.SetActive(true);
             coin.GetComponent<CoinController>().value = goldAmount / count;
+            coin.GetComponent<CoinController>().OnComplete = () =>
+            {
+                coin.GetComponent<CoinController>().value += (int)
+                    CustomValueManager.Instance.GetCustomValueInGame(
+                        CustomValueManager.FISH_GOLD_BONUS
+                    );
+                FishManager.Instance.SpawnTextFloating(coin.GetComponent<CoinController>().value.ToString(), transform.position);
+                GameManager.Instance.AddGold(coin.GetComponent<CoinController>().value);
+                PoolSystem.Instance.ReturnObject(gameObject, "Coin");
+                AudioManager.Instance.PlaySound("Coin");
+            };
             coin.GetComponent<CoinController>().Active();
         }
         goldAmount = 0;

@@ -56,6 +56,8 @@ namespace Factory
 
         public bool isInShop = false;
 
+        public Image selectedSignImage;
+
         public System.Action<float> OnRotate;
         public System.Action<GearData> OnDropShop;
 
@@ -77,6 +79,9 @@ namespace Factory
 
         public float currentSpeed = 0;
         public TMP_Text LevelText => _levelText;
+
+        public bool hasSeagull = false;
+        public GameObject seagullObject;
 
         protected void Awake()
         {
@@ -625,6 +630,25 @@ namespace Factory
             }
             GetComponent<CanvasGroup>().alpha = 1f;
             _gui.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.InSine);
+        }
+
+        public void ActiveSeagull()
+        {
+            if (hasSeagull)
+            {
+                return;
+            }
+            hasSeagull = true;
+            seagullObject.SetActive(true);
+        }
+        public void DeactiveSeagull()
+        {
+            if (!hasSeagull)
+            {
+                return;
+            }
+            hasSeagull = false;
+            seagullObject.SetActive(false);
         }
     }
 

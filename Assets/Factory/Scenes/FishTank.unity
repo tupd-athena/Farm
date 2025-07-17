@@ -12942,7 +12942,7 @@ GameObject:
   - component: {fileID: 618768449}
   - component: {fileID: 618768448}
   m_Layer: 0
-  m_Name: Image
+  m_Name: Dune
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -38181,6 +38181,7 @@ GameObject:
   - component: {fileID: 1477553647}
   - component: {fileID: 1477553648}
   - component: {fileID: 1477553649}
+  - component: {fileID: 1477553650}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -38226,6 +38227,7 @@ MonoBehaviour:
   _circle: {fileID: 1023180011}
   _circleSpeed: 90
   _itemContainer: {fileID: 973239495}
+  _duneObject: {fileID: 1132704127}
   _itemPool: {fileID: 343270281}
   _gearDataSO: {fileID: 11400000, guid: ba17c2ff4cbc9493a91a407e6fe93fd0, type: 2}
   _itemDataSO: {fileID: 11400000, guid: 5dc22232c4763410e8487ef2117b3c1c, type: 2}
@@ -38255,6 +38257,8 @@ MonoBehaviour:
     maxInPool: 10
   sumOfFishesHealth: 0
   totalHP: 0
+  sacrificeGears: []
+  SacrificePoint: 0
 --- !u!114 &1477553648
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -38283,6 +38287,34 @@ MonoBehaviour:
   specialTextGear:
   - Multiplier
   - SpeedUP
+--- !u!114 &1477553650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1477553645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d83893e2dbcf41a5b651ee0f39d128a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  highestDay: 0
+  highestFish: 0
+  highestGold: 0
+  highestBosses: 0
+  totalDays: 0
+  totalFish: 0
+  totalGoldCollected: 0
+  totalBossesDefeated: 0
+  totalGoldSpent: 0
+  totalFishDead: 0
+  currentDay: 1
+  currentFish: 0
+  currentGold: 0
+  currentBosses: 0
+  refreshValues: 0
+  clearAllPlayerPrefs: 0
 --- !u!1 &1482263586
 GameObject:
   m_ObjectHideFlags: 0

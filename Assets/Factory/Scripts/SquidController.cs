@@ -44,7 +44,18 @@ public class SquidController : FishController
                 });
             _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
             FishManager.Instance.CheckWinLose();
-            InventoryManager.Instance.AddGift(1);
+            // InventoryManager.Instance.AddTickets(1);
+            var ticket = Instantiate(Resources.Load<GameObject>("Prefabs/Ticket"));
+            ticket.transform.position = transform.position;
+            ticket.SetActive(true);
+            ticket.GetComponent<CoinController>().value = 1;
+            ticket.GetComponent<CoinController>().Active();
+            ticket.GetComponent<CoinController>().OnComplete = () =>
+            {
+                InventoryManager.Instance.AddTickets(1);
+                AudioManager.Instance.PlaySound("Coin");
+                Destroy(ticket); // Clean up the ticket object after use
+            };
         }
     }
 

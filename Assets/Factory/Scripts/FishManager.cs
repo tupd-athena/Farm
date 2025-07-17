@@ -262,6 +262,11 @@ namespace Factory
                     indexFish += 2;
                     Debug.Log("InitFish: " + fishConfig.fishConfig.fishCurrencyValue);
                     fish.gameObject.name = "Fish" + index;
+                    var fishRemaining = this.totalFish - _fishes.Count;
+                    if (fishRemaining < 0)
+                    {
+                        return;
+                    }
                     GameManager.Instance.homeUI.NotReadyFishAmountText.text = (
                         this.totalFish - _fishes.Count
                     ).ToString();

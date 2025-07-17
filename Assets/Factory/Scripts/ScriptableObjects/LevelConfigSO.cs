@@ -113,11 +113,13 @@ namespace Factory
             {
                 Debug.LogError("Total weight is 0");
             }
-            float moneyOfDay =  maxTotalFishHP;
+            float moneyOfDay = maxTotalFishHP;
             float coinOfDay = maxCoinDrop;
 
             foreach (var fish in newDayConfiguration.fishConfigs)
             {
+                fish.fishConfig.percentHP =
+                    (fish.fishConfig.weight / (float)totalWeight) * moneyOfDay / (float)fish.amount;
                 fish.fishConfig.fishCurrencyValue = Mathf.Max(
                     Mathf.RoundToInt(
                         (fish.fishConfig.weight / (float)totalWeight)

@@ -7,125 +7,384 @@ using UnityEngine;
 
 public class SwordfishController : FishController
 {
-    public bool isAttacking = false;
+    #region Constants
+    private const float SCREEN_LEFT_THRESHOLD = -0.2f;
+    private const float SCREEN_RIGHT_THRESHOLD = 1.2f;
+    private const int INITIAL_SORTING_ORDER = 100;
+    private const float FADE_DURATION = 3f;
+    private const float DEATH_MOVE_Y = -1f;
+    private const float SWAY_SPEED_ACTIVE = 1f;
+    private const float SWAY_SPEED_INACTIVE = 0f;
+    private const float MOVE_AREA_MULTIPLIER = 10f;
+    private const float POSITION_MULTIPLIER = 0.1f;
+    private const int RANDOM_RANGE_MIN = -30;
+    private const int RANDOM_RANGE_MAX = 30;
+    private const float TARGET_X_LEFT = -15f;
+    private const float TARGET_X_RIGHT = 15f;
+    private const int SPEED_FAST = 5;
+    private const int SPEED_SLOW = 2;
+    #endregion
 
-    public int SwordfishState = 0;
-
+    #region Public Fields
+    [Header("Swordfish Behavior")]
     public float range = 10f;
-    public bool canAttack = false;
     public bool showVFX = true;
 
+    [Header("VFX References")]
     public Transform vfx;
     public Transform vfxFlip;
+    #endregion
 
-    // List to track fishes that have been attacked by this swordfish
+    #region Private Fields
+    [SerializeField]
+    private int swordfishState = 0;
+    private bool canAttack = false;
+    private bool isAttacking = false;
+
+    // Performance optimizations
     private List<FishController> attackedFishes = new List<FishController>();
+    private System.Random random = new System.Random();
+    private HomeUI cachedHomeUI;
+    private Camera cachedCamera;
 
+    // Attack optimization
+    private float lastAttackCheckTime;
+    private const float ATTACK_CHECK_INTERVAL = 0.1f; // Check for attacks 10 times per second instead of every frame
+    #endregion
+
+    #region Properties
+    public int SwordfishState
+    {
+        get => swordfishState;
+        private set => swordfishState = value;
+    }
+
+    public bool CanAttack => canAttack;
+    public bool IsAttacking => isAttacking;
+    #endregion
+
+    #region Initialization
+    private void Start()
+    {
+        CacheComponents();
+    }
+
+    private void CacheComponents()
+    {
+        if (cachedCamera == null)
+            cachedCamera = Camera.main;
+        if (cachedHomeUI == null && GameManager.Instance != null)
+            cachedHomeUI = GameManager.Instance.homeUI;
+    }
+    #endregion
+
+    #region Health and Death Management
     public void DecreaseHPByClick()
     {
-        // base.DecreaseHPByTime();
         if (state != FishState.Moving)
-        {
             return;
-        }
-        currentTotalTickValue -= fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100;
+
+        float damage = fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100f;
+        currentTotalTickValue -= damage;
         currentTotalTickValue = Mathf.Max(currentTotalTickValue, 0);
+
         UpdateHpBar();
-        SetColor(new Color32(255, 125, 125, 255));
+        SetDamageColor();
+
         if (currentTotalTickValue <= 0)
         {
-            state = FishState.Dead;
-            _moveTween.Kill();
-            FlipWithDirection(new Vector3(-1, -1, 1));
-            _spriteRenderer.DOFade(0, 3f);
-            transform
-                .DOLocalMoveY(-1, 3f)
-                .OnComplete(() =>
-                {
-                    gameObject.SetActive(false);
-                });
-            _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
-            FishManager.Instance.CheckWinLose();
-
-            InventoryManager.Instance.AddGift(1);
+            HandleDeath();
         }
     }
 
+    private void SetDamageColor()
+    {
+        SetColor(new Color32(255, 125, 125, 255));
+    }
+
+    private void HandleDeath()
+    {
+        state = FishState.Dead;
+        _moveTween.Kill();
+        FlipWithDirection(new Vector3(-1, -1, 1));
+
+        var deathSequence = DOTween.Sequence();
+        deathSequence.Append(_spriteRenderer.DOFade(0, FADE_DURATION));
+        deathSequence.Join(transform.DOLocalMoveY(DEATH_MOVE_Y, FADE_DURATION));
+        deathSequence.OnComplete(() => gameObject.SetActive(false));
+
+        _spriteRenderer.material.SetFloat("_SwaySpeed", SWAY_SPEED_INACTIVE);
+        FishManager.Instance.CheckWinLose();
+        // InventoryManager.Instance.AddTickets(1);
+        var ticket = Instantiate(Resources.Load<GameObject>("Prefabs/Ticket"));
+        ticket.transform.position = transform.position;
+        ticket.SetActive(true);
+        ticket.GetComponent<CoinController>().value = 1;
+        ticket.GetComponent<CoinController>().Active();
+        ticket.GetComponent<CoinController>().OnComplete = () =>
+        {
+            InventoryManager.Instance.AddTickets(1);
+            AudioManager.Instance.PlaySound("Coin");
+            Destroy(ticket); // Clean up the ticket object after use
+        };
+    }
+    #endregion
+
+    #region Update and Screen Management
     public override void Update()
     {
-        //Check gameObject is out of screen
-        Vector3 screenPosition = Camera.main.WorldToViewportPoint(transform.position);
-        if (screenPosition.x < -0.2f)
+        HandleScreenIndicators();
+
+        if (canAttack && Time.time >= lastAttackCheckTime + ATTACK_CHECK_INTERVAL)
         {
-            GameManager.Instance.homeUI.indicatorLeft.gameObject.SetActive(true);
-            GameManager.Instance.homeUI.indicatorLeft.transform.position = new Vector3(
-                GameManager.Instance.homeUI.indicatorLeft.transform.position.x,
-                transform.position.y,
-                GameManager.Instance.homeUI.indicatorLeft.transform.position.z
-            );
+            lastAttackCheckTime = Time.time;
+            CheckForAttackTargets();
         }
-        else if (screenPosition.x > 1.2f)
+    }
+
+    private void HandleScreenIndicators()
+    {
+        if (cachedCamera == null || cachedHomeUI == null)
         {
-            GameManager.Instance.homeUI.indicatorRight.gameObject.SetActive(true);
-            GameManager.Instance.homeUI.indicatorRight.transform.position = new Vector3(
-                GameManager.Instance.homeUI.indicatorRight.transform.position.x,
-                transform.position.y,
-                GameManager.Instance.homeUI.indicatorRight.transform.position.z
-            );
+            CacheComponents();
+            return;
+        }
+
+        Vector3 screenPosition = cachedCamera.WorldToViewportPoint(transform.position);
+
+        bool isOffScreenLeft = screenPosition.x < SCREEN_LEFT_THRESHOLD;
+        bool isOffScreenRight = screenPosition.x > SCREEN_RIGHT_THRESHOLD;
+
+        if (isOffScreenLeft)
+        {
+            SetIndicatorActive(cachedHomeUI.IndicatorLeft, true);
+            UpdateIndicatorPosition(cachedHomeUI.IndicatorLeft);
+            SetIndicatorActive(cachedHomeUI.IndicatorRight, false);
+        }
+        else if (isOffScreenRight)
+        {
+            SetIndicatorActive(cachedHomeUI.IndicatorRight, true);
+            UpdateIndicatorPosition(cachedHomeUI.IndicatorRight);
+            SetIndicatorActive(cachedHomeUI.IndicatorLeft, false);
         }
         else
         {
-            GameManager.Instance.homeUI.indicatorLeft.gameObject.SetActive(false);
-            GameManager.Instance.homeUI.indicatorRight.gameObject.SetActive(false);
+            SetIndicatorActive(cachedHomeUI.IndicatorLeft, false);
+            SetIndicatorActive(cachedHomeUI.IndicatorRight, false);
         }
+    }
 
-        if (!canAttack)
+    private void SetIndicatorActive(RectTransform indicator, bool active)
+    {
+        if (indicator != null && indicator.gameObject.activeSelf != active)
         {
-            return;
+            indicator.gameObject.SetActive(active);
         }
-        //raycast to find fish
-        RaycastHit2D[] hits = Physics2D.BoxCastAll(
+    }
+
+    private void UpdateIndicatorPosition(RectTransform indicator)
+    {
+        if (indicator != null)
+        {
+            var indicatorTransform = indicator.transform;
+            indicatorTransform.position = new Vector3(
+                indicatorTransform.position.x,
+                transform.position.y,
+                indicatorTransform.position.z
+            );
+        }
+    }
+
+    private void CheckForAttackTargets()
+    {
+        var hits = Physics2D.BoxCastAll(
             transform.position,
             new Vector2(range, range),
             0,
             Vector2.zero
         );
-        foreach (RaycastHit2D hit in hits)
+
+        foreach (var hit in hits)
         {
-            if (hit.collider != null && hit.collider.CompareTag("Fish"))
+            if (ShouldAttackFish(hit, out var fishController))
             {
-                var fishController = hit.collider.GetComponent<FishController>();
-                if (
-                    fishController == null
-                    || fishController.state == FishState.Dead
-                    || fishController.fishConfig.isBoss
-                )
-                {
-                    // Skip if the fish is null, dead, a boss, or already attacked
-                    continue;
-                }
-                if (fishController.state != FishState.Moving)
-                {
-                    continue;
-                }
-
-                // Check if this fish has already been attacked
-                if (attackedFishes.Contains(fishController))
-                {
-                    continue;
-                }
-
-                // Attack the fish and add it to the attacked list
-                fishController.TakeDamage(
-                    fishController.fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100,
-                    transform
-                );
-                Debug.Log("Attack by Swordfish");
-                attackedFishes.Add(fishController);
+                AttackFish(fishController);
             }
         }
     }
 
+    private bool ShouldAttackFish(RaycastHit2D hit, out FishController fishController)
+    {
+        fishController = null;
+
+        if (hit.collider == null || !hit.collider.CompareTag("Fish"))
+            return false;
+
+        fishController = hit.collider.GetComponent<FishController>();
+
+        return fishController != null
+            && fishController.state == FishState.Moving
+            && !fishController.fishConfig.isBoss
+            && !attackedFishes.Contains(fishController);
+    }
+
+    private void AttackFish(FishController fishController)
+    {
+        float damage =
+            fishController.fishConfig.fishCurrencyValue * fishConfig.percentDecrease / 100f;
+        fishController.TakeDamage(damage, transform);
+        attackedFishes.Add(fishController);
+
+        Debug.Log($"Swordfish attacked {fishController.name} for {damage} damage");
+    }
+    #endregion
+
+    #region Fish Initialization and Setup
+    public override void Init(FishConfig fishConfig, int index)
+    {
+        Debug.Log("Swordfish Init");
+        this.fishConfig = fishConfig;
+
+        SetupSortingOrders(index);
+        InitializeState();
+        CacheComponents();
+
+        // Initialize the attacked fishes list
+        attackedFishes.Clear();
+
+        Move();
+
+        currentTotalTickValue = fishConfig.fishCurrencyValue;
+        SetupMaterial();
+        _currentTargetItem = null;
+    }
+
+    private void SetupSortingOrders(int index)
+    {
+        int baseSortingOrder = INITIAL_SORTING_ORDER + index;
+        _hpBarMask.sortingOrder = baseSortingOrder;
+        hpBar.GetComponent<SpriteRenderer>().sortingOrder = baseSortingOrder + 1;
+        _spriteMask.frontSortingOrder = baseSortingOrder + 2;
+        _spriteMask.backSortingOrder = baseSortingOrder;
+        SetLinesSortingOrder(baseSortingOrder + 2);
+    }
+
+    private void InitializeState()
+    {
+        currentTotalTickValue = 0;
+        state = FishState.Moving;
+        SetSprite(0);
+        targetPosition = transform.position;
+        SwordfishState = 0;
+    }
+
+    private void SetupMaterial()
+    {
+        _spriteRenderer.material.SetFloat("_SwaySpeed", SWAY_SPEED_ACTIVE);
+        _spriteRenderer.material.SetColor("_Color", Color.white);
+    }
+    #endregion
+
+    #region Movement and AI Logic
+    public override void Move()
+    {
+        int previousState = SwordfishState;
+        var movementData = CalculateMovement();
+
+        ApplyMovementData(movementData);
+        UpdateVFXState();
+        ClearAttackedFishesOnStateChange(previousState);
+
+        targetPosition = CalculateTargetPosition(movementData.targetX);
+        base.Move();
+    }
+
+    private MovementData CalculateMovement()
+    {
+        return SwordfishState switch
+        {
+            0 => new MovementData(GetRandomX(), 1, SPEED_FAST, false),
+            1 => new MovementData(GetRandomX(), 2, SPEED_SLOW, false),
+            2 => new MovementData(GetRandomX(), 3, SPEED_SLOW, false),
+            3 => new MovementData(GetRandomX(), 4, SPEED_SLOW, false),
+            4 => new MovementData(GetRandomX(), 5, SPEED_SLOW, false),
+            5 => new MovementData(TARGET_X_LEFT, 6, SPEED_FAST, false),
+            6 => new MovementData(TARGET_X_RIGHT, 7, SPEED_FAST, true),
+            7 => new MovementData(TARGET_X_LEFT, 8, SPEED_FAST, true),
+            8 => new MovementData(TARGET_X_RIGHT, 0, SPEED_FAST, true),
+            _ => new MovementData(transform.localPosition.x, 0, SPEED_FAST, false),
+        };
+    }
+
+    private float GetRandomX()
+    {
+        return random.Next(RANDOM_RANGE_MIN, RANDOM_RANGE_MAX) * POSITION_MULTIPLIER;
+    }
+
+    private void ApplyMovementData(MovementData data)
+    {
+        SwordfishState = data.nextState;
+        fishConfig.speed = data.speed;
+        canAttack = data.canAttack;
+        showVFX = data.canAttack;
+    }
+
+    private void UpdateVFXState()
+    {
+        if (!showVFX)
+        {
+            SetVFXActive(false, false);
+            return;
+        }
+
+        bool facingLeft = _fishBody.transform.localScale.x < 0;
+        SetVFXActive(facingLeft, !facingLeft);
+    }
+
+    private void SetVFXActive(bool vfxActive, bool vfxFlipActive)
+    {
+        if (vfx != null)
+            vfx.gameObject.SetActive(vfxActive);
+        if (vfxFlip != null)
+            vfxFlip.gameObject.SetActive(vfxFlipActive);
+    }
+
+    private void ClearAttackedFishesOnStateChange(int previousState)
+    {
+        if (previousState != SwordfishState)
+        {
+            attackedFishes.Clear();
+        }
+    }
+
+    private Vector3 CalculateTargetPosition(float targetX)
+    {
+        int moveArea = (int)(fishConfig.moveArea * MOVE_AREA_MULTIPLIER);
+        moveArea = Mathf.Abs(moveArea);
+        float randomY = fishConfig.depth + random.Next(-moveArea, moveArea) * POSITION_MULTIPLIER;
+        return new Vector3(targetX, randomY, 0);
+    }
+    #endregion
+
+    #region Helper Structures
+    private struct MovementData
+    {
+        public readonly float targetX;
+        public readonly int nextState;
+        public readonly int speed;
+        public readonly bool canAttack;
+
+        public MovementData(float targetX, int nextState, int speed, bool canAttack)
+        {
+            this.targetX = targetX;
+            this.nextState = nextState;
+            this.speed = speed;
+            this.canAttack = canAttack;
+        }
+    }
+    #endregion
+
+    #region Public Methods
     public void SetColor(Color color, float duration = 0.1f)
     {
         _spriteRenderer.DOComplete();
@@ -134,138 +393,32 @@ public class SwordfishController : FishController
             .SetLoops(2, LoopType.Yoyo)
             .OnComplete(() =>
             {
-                _spriteRenderer.DOColor(new Color32(255, 255, 255, 255), duration);
+                _spriteRenderer.DOColor(Color.white, duration);
             });
-    }
-
-    public override void Init(FishConfig fishConfig, int index)
-    {
-        Debug.Log("Swordfish Init");
-        this.fishConfig = fishConfig;
-        _hpBarMask.sortingOrder = 100 + index;
-        hpBar.GetComponent<SpriteRenderer>().sortingOrder = 100 + index + 1;
-        _spriteMask.frontSortingOrder = 100 + index + 2;
-        _spriteMask.backSortingOrder = 100 + index;
-        SetLinesSortingOrder(100 + index + 2);
-        currentTotalTickValue = 0;
-        state = FishState.Moving;
-        SetSprite(0);
-        targetPosition = transform.position;
-
-        // Initialize the attacked fishes list
-        attackedFishes.Clear();
-
-        Move();
-        currentTotalTickValue = fishConfig.fishCurrencyValue;
-        _spriteRenderer.material.SetFloat("_SwaySpeed", 1);
-        _spriteRenderer.material.SetColor("_Color", new Color32(255, 255, 255, 255));
-        _currentTargetItem = null;
-    }
-
-    public override void Move()
-    {
-        System.Random random = new System.Random();
-        float targetX = 0;
-        int previousState = SwordfishState;
-
-        switch (SwordfishState)
-        {
-            case 0: // Initial random movement
-                targetX = random.Next(-30, 30) * 0.1f;
-                SwordfishState = 1;
-                fishConfig.speed = 5;
-                canAttack = false;
-                break;
-            case 1: // Random movement phase 1
-                targetX = random.Next(-30, 30) * 0.1f;
-                SwordfishState = 2;
-                fishConfig.speed = 2;
-                canAttack = false;
-                break;
-            case 2: // Random movement phase 2
-                targetX = random.Next(-30, 30) * 0.1f;
-                SwordfishState = 3;
-                fishConfig.speed = 2;
-                canAttack = false;
-                break;
-            case 3: // Random movement phase 3
-                targetX = random.Next(-30, 30) * 0.1f;
-                SwordfishState = 4;
-                fishConfig.speed = 2;
-                canAttack = false;
-                break;
-            case 4: // Final random movement before attacking phase
-                targetX = random.Next(-30, 30) * 0.1f;
-                SwordfishState = 5;
-                fishConfig.speed = 2;
-                canAttack = false;
-                break;
-            case 5: // Moving to left side
-                targetX = -15;
-                SwordfishState = 6;
-                fishConfig.speed = 5;
-                canAttack = false;
-                break;
-            case 6: // Moving to right side (attack phase 1)
-                targetX = 15;
-                SwordfishState = 7;
-                fishConfig.speed = 5;
-                canAttack = true;
-                break;
-            case 7: // Moving to left side (attack phase 2)
-                targetX = -15;
-                SwordfishState = 8;
-                fishConfig.speed = 5;
-                canAttack = true;
-                break;
-            case 8: // Moving to right side (attack phase 3)
-                targetX = 15;
-                SwordfishState = 0;
-                fishConfig.speed = 5;
-                canAttack = true;
-                break;
-            default:
-                targetX = transform.localPosition.x;
-                SwordfishState = 0;
-                break;
-        }
-        showVFX = canAttack;
-
-        // Clear attacked fishes list when state changes
-        if (previousState != SwordfishState)
-        {
-            attackedFishes.Clear();
-        }
-
-        if (targetPosition == transform.localPosition)
-        {
-            int moveArea = (int)(fishConfig.moveArea * 10);
-            moveArea = Mathf.Abs(moveArea);
-            float randomY = fishConfig.depth + random.Next(-moveArea, moveArea) * 0.1f;
-            targetPosition = new Vector3(targetX, randomY, 0);
-        }
-        base.Move();
-        if (!showVFX)
-        {
-            vfx.gameObject.SetActive(false);
-            vfxFlip.gameObject.SetActive(false);
-            return;
-        }
-        vfx.gameObject.SetActive(_fishBody.transform.localScale.x < 0);
-        vfxFlip.gameObject.SetActive(_fishBody.transform.localScale.x > 0);
     }
 
     public void StopAttack()
     {
         isAttacking = false;
+        canAttack = false;
     }
 
     public override void OnClick()
     {
-        // base.OnClick();
-        Debug.Log("Squid OnClick");
+        Debug.Log("Swordfish OnClick");
         DecreaseHPByClick();
     }
 
     public override void CheckFull() { }
+
+    #endregion
+
+    #region Cleanup
+    private void OnDestroy()
+    {
+        attackedFishes?.Clear();
+        _spriteRenderer?.DOKill();
+        transform?.DOKill();
+    }
+    #endregion
 }

@@ -6,7 +6,7 @@ namespace Factory
     {
         None,
         Main,
-        Shop
+        Shop,
     }
 
     public class GameState : MonoBehaviour
@@ -46,7 +46,7 @@ namespace Factory
                     // Hide all UI elements
                     if (GameManager.Instance.homeUI != null)
                     {
-                        GameManager.Instance.homeUI.gameObject.SetActive(false);
+                        GameManager.Instance.homeUI.NavigationBar.ShowAllTabsAndBar();
                     }
                     break;
 
@@ -97,4 +97,4 @@ namespace Factory
             }
         }
     }
-} 
+}

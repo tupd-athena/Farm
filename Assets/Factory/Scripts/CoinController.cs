@@ -11,7 +11,9 @@ namespace Factory
 
         public bool isCollected = false;
         public System.Action OnCollect;
+        public System.Action OnComplete;
         public bool canClick = true;
+
 
         public ParticleSystem sparkleEffect;
 
@@ -46,14 +48,8 @@ namespace Factory
                 .SetEase(Ease.OutSine)
                 .OnComplete(() =>
                 {
-                    value += (int)
-                        CustomValueManager.Instance.GetCustomValueInGame(
-                            CustomValueManager.FISH_GOLD_BONUS
-                        );
-                    FishManager.Instance.SpawnTextFloating(value.ToString(), transform.position);
-                    GameManager.Instance.AddGold(value);
-                    PoolSystem.Instance.ReturnObject(gameObject, "Coin");
-                    AudioManager.Instance.PlaySound("Coin");
+                    OnComplete?.Invoke();
+                    
                 });
         }
     }

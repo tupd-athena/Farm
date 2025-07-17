@@ -31,6 +31,9 @@ namespace Factory
         private GameObject _itemContainer;
 
         [SerializeField]
+        private GameObject _duneObject;
+
+        [SerializeField]
         private PoolSystem _itemPool;
 
         [SerializeField]
@@ -68,6 +71,7 @@ namespace Factory
         private int _gold = 0;
         public GridLayoutGroup GearItemContainer => _gearItemContainer;
         public List<GameObject> ActiveItems => _activeItems;
+        public GameObject DuneObject => _duneObject;
 
         public System.Action OnGameStart;
 
@@ -80,6 +84,9 @@ namespace Factory
         public long sumOfFishesHealth = 0;
 
         public int totalHP;
+
+        public List<GearController> sacrificeGears;
+        public int SacrificePoint = 0;
 
         public float GetBottomYWithOffset(float offset = 0.1f)
         {
@@ -120,16 +127,28 @@ namespace Factory
         public void Start()
         {
             currentLevel = 0;
-            _currentLevelConfig = GetCurrentLevelConfig();
-
             homeUI = AppManager.Instance.ShowSafeOverlayUI<HomeUI>("Factory/HomeUI");
             if (homeUI == null)
             {
                 return;
             }
-            homeUI.StartButton.onClick.AddListener(StartGame);
+            // homeUI.StartButton.onClick.AddListener(StartGame);
             // _circle.rotation = new Vector3(0, 0, _circleSpeed);
-            NewGame();
+            // NewGame();
+            OnGameStart = null;
+            _isFirstOpenShop = false;
+            isStop = true;
+            _currentLevelConfig = GetCurrentLevelConfig();
+            currentDay = 0;
+            totalHP = 0;
+            SacrificePoint = 0;
+            _gold = 0;
+            _duneObject.SetActive(false);
+            Debug.Log("new: 1");
+            CustomValueManager.Instance.ClearCustomValueInGame();
+            homeUI.HideArtifactPopup();
+            homeUI.HideShopPopup();
+            homeUI.WavePanel.SetActive(false);
         }
 
         public void ResetArtifactTweens()
@@ -141,15 +160,22 @@ namespace Factory
 
         public async Task NewGame()
         {
+            homeUI.TicketPanel.SetActive(false);
+            homeUI.WavePanel.SetActive(true);
+            homeUI.GoldContainer.gameObject.SetActive(true);
+            homeUI.buttonQuit.gameObject.SetActive(true);
             OnGameStart = null;
             _isFirstOpenShop = false;
             isStop = true;
             _currentLevelConfig = GetCurrentLevelConfig();
             currentDay = 0;
             totalHP = 0;
+            SacrificePoint = 0;
             dayConfiguration = GetDayConfig();
             totalHP = dayConfiguration.maxInPool;
             _gold = 0;
+            GamePlayTracking.Instance.ResetCurrentRunStats();
+            _duneObject.SetActive(true);
             Debug.Log("new: 1");
             CustomValueManager.Instance.ClearCustomValueInGame();
             InitGears(_currentLevelConfig.gridSize);
@@ -167,21 +193,9 @@ namespace Factory
             ChangeGameState(GameStateType.Shop);
             homeUI.UpdateDay();
             homeUI.HideArtifactPopup();
-            if (
-                InventoryManager.Instance.inventoryData != null
-                && InventoryManager.Instance.inventoryData.giftAmount > 0
-            )
-            {
-                InventoryManager.Instance.ShowInventory();
-                InventoryManager.Instance.UpdateGiftText();
-                InventoryManager.Instance.ShowRewardCards();
-            }
-            else
-            {
-                homeUI.HideInventory();
-            }
             Debug.Log("new: 7");
-            await homeUI.ShowGameStartPanel();
+            // SacrificeRandomGears();
+            // SeagullRandomGears();
             Debug.Log("new: 8");
         }
 
@@ -198,7 +212,7 @@ namespace Factory
             {
                 return dayConfig = _levelConfigSO.GetDayConfig(
                     _levelConfigSO.fixedDayConfigurations[currentDay],
-                    GetMaxTotalFishHP(),
+                    ComputeTotalFishHP(),
                     GetMaxCoinDrop()
                 );
             }
@@ -208,7 +222,7 @@ namespace Factory
                     _levelConfigSO.normalDayConfigurations[
                         random.Next(0, _levelConfigSO.normalDayConfigurations.Count)
                     ],
-                    GetMaxTotalFishHP(),
+                    ComputeTotalFishHP(),
                     GetMaxCoinDrop()
                 );
             }
@@ -218,7 +232,7 @@ namespace Factory
                     _levelConfigSO.specialDayConfigurations[
                         random.Next(0, _levelConfigSO.bossDayConfigurations.Count)
                     ],
-                    GetMaxTotalFishHP(),
+                    ComputeTotalFishHP(),
                     GetMaxCoinDrop()
                 );
             }
@@ -228,14 +242,14 @@ namespace Factory
                     _levelConfigSO.bossDayConfigurations[
                         random.Next(0, _levelConfigSO.specialDayConfigurations.Count)
                     ],
-                    GetMaxTotalFishHP(),
+                    ComputeTotalFishHP(),
                     GetMaxCoinDrop()
                 );
             }
             return dayConfig;
         }
 
-        public long GetMaxTotalFishHP()
+        public long ComputeTotalFishHP()
         {
             sumOfFishesHealth =
                 _currentLevelConfig.maxTotalFishHP * (1 + (long)(0.2f * Mathf.Pow(2, currentDay)));
@@ -264,6 +278,30 @@ namespace Factory
             ClearItems();
             currentDay++;
             dayConfiguration = GetDayConfig();
+
+            // Give 5 diamonds every 5 days
+            if (currentDay % 5 == 0 && currentDay > 0)
+            {
+                InventoryManager.Instance.AddDiamonds(5);
+                for (int i = 0; i < 1; i++)
+                {
+                    var diamond = Instantiate(Resources.Load<GameObject>("Prefabs/Diamond"));
+                    diamond.transform.position = transform.position;
+                    diamond.SetActive(true);
+                    diamond.GetComponent<CoinController>().value = 1;
+                    diamond.GetComponent<CoinController>().Active();
+                    diamond.GetComponent<CoinController>().OnComplete = () =>
+                    {
+                        InventoryManager.Instance.AddDiamonds(1);
+                        AudioManager.Instance.PlaySound("Coin");
+                        Destroy(diamond); // Clean up the ticket object after use
+                    };
+                }
+                Debug.Log(
+                    $"Day {currentDay}: Player received 5 diamonds for reaching day milestone!"
+                );
+            }
+
             if (currentDay % 10 == 5)
             {
                 RandomArtifactPopup();
@@ -278,21 +316,79 @@ namespace Factory
             InitFishes(dayConfiguration.fishConfigs);
             Debug.Log($"UpdateGold + {_currentLevelConfig.initialLevelCurrency}");
             homeUI.UpdateDay();
+            // SacrificeRandomGears();
+
             ChangeGameState(GameStateType.Shop);
         }
 
         public async Task ShowLosePanel()
         {
+            // Stop all game activities immediately
+            isStop = true;
+
+            // Clear all active game objects
             await FishManager.Instance.ClearFishes();
             CancelInvoke(nameof(SpawnPearl));
-            await Task.Delay(1000);
-            isStop = true;
-            Debug.Log($"ShowLosePanel");
-            await homeUI.ShowLosePanel();
-            currentDay = 0;
+            ResetArtifactTweens();
             ClearAllGears();
             ClearItems();
-            NewGame();
+
+            // Reset all game state variables
+            currentDay = 0;
+            currentLevel = 0;
+            totalHP = 0;
+            sumOfFishesHealth = 0;
+            SacrificePoint = 0;
+            _gold = 0;
+            _isFirstOpenShop = false;
+
+            // Clear sacrifice gears list
+            if (sacrificeGears != null)
+            {
+                foreach (var gear in sacrificeGears)
+                {
+                    if (gear != null && gear.selectedSignImage != null)
+                    {
+                        gear.selectedSignImage.gameObject.SetActive(false);
+                    }
+                }
+                sacrificeGears.Clear();
+            }
+
+            // Deactivate all artifacts
+            foreach (var artifact in artifacts)
+            {
+                if (artifact != null)
+                {
+                    artifact.SetActive(false);
+                }
+            }
+
+            // Reset custom values
+            CustomValueManager.Instance.ClearCustomValueInGame();
+
+            // Reset game tracking
+            GamePlayTracking.Instance.ResetCurrentRunStats();
+
+            // Reset UI state
+            homeUI.UpdateGoldText(_gold);
+            homeUI.WavePanel.SetActive(false);
+            homeUI.GoldContainer.gameObject.SetActive(false);
+            homeUI.buttonQuit.gameObject.SetActive(false);
+            homeUI.HideArtifactPopup();
+            homeUI.HideShopPopup();
+
+            // Deactivate dune object
+            _duneObject.SetActive(false);
+
+            // Reset game state to initial state
+            ChangeGameState(GameStateType.None);
+
+            // Clear any remaining event subscriptions
+            OnGameStart = null;
+
+            Debug.Log("Game completely ended and reset to initial state");
+            homeUI.NavigationBar.ShowAllTabsAndBar();
         }
 
         public void StartGame()
@@ -476,12 +572,14 @@ namespace Factory
 
         public void UpdateGold(int gold)
         {
+            GamePlayTracking.Instance.TrackGold(gold - _gold);
             _gold = gold;
             homeUI.UpdateGoldText(gold);
         }
 
         public void AddGold(int gold)
         {
+            GamePlayTracking.Instance.TrackGold(gold);
             _gold += gold;
             homeUI.UpdateGoldText(_gold);
             CheckGoldAllGearsInShop();
@@ -544,22 +642,36 @@ namespace Factory
         {
             System.Random random = new System.Random();
             int gearindex = random.Next(0, _gearControllers.Count);
+            var currentLevelConfig = GetCurrentLevelConfig();
+            var gridSize = currentLevelConfig.gridSize;
+
             do
             {
                 gearindex = random.Next(0, _gearControllers.Count);
-            } while (
-                _gearControllers[gearindex].isHead
-                || (
-                    (
-                        _gearControllers[gearindex].gridCoordinate.x % 2 == 0
-                        && _gearControllers[gearindex].gridCoordinate.y % 2 == 1
-                    )
-                    || (
-                        _gearControllers[gearindex].gridCoordinate.x % 2 == 1
-                        && _gearControllers[gearindex].gridCoordinate.y % 2 == 0
+                var gear = _gearControllers[gearindex];
+                var coord = gear.gridCoordinate;
+
+                // Check if gear is on edge or corner
+                bool isOnEdge =
+                    coord.x == 0
+                    || coord.y == gridSize.x - 1
+                    || coord.y == 0
+                    || coord.x == gridSize.y - 1;
+
+                // Exit loop if this gear is valid (not head, not on edge, and passes existing conditions)
+                if (
+                    !gear.isHead
+                    && !isOnEdge
+                    && !(
+                        (coord.x % 2 == 0 && coord.y % 2 == 1)
+                        || (coord.x % 2 == 1 && coord.y % 2 == 0)
                     )
                 )
-            );
+                {
+                    break;
+                }
+            } while (true);
+
             _gearControllers[gearindex].Rotate();
             _gearControllers[gearindex].Show();
             _gearControllers[gearindex].isHead = true;
@@ -1034,6 +1146,65 @@ namespace Factory
         public GearRarityData GetGearRarityData(GearRarity rarityType)
         {
             return _gearDataSO.gearRarityDataList.Find(r => r.rarity == rarityType);
+        }
+
+        public void SacrificeRandomGears()
+        {
+            return;
+            System.Random random = new System.Random();
+            int count = random.Next(0, 3);
+            foreach (var gear in sacrificeGears)
+            {
+                gear.selectedSignImage.gameObject.SetActive(false);
+                if (gear.gearData != null && !string.IsNullOrEmpty(gear.gearData.itemName))
+                {
+                    gear.Hide();
+                    SacrificePoint++;
+                }
+            }
+            sacrificeGears = new List<GearController>();
+            if (_gearControllers.Count == 0)
+            {
+                return;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                var listGears = _gearControllers.FindAll(g =>
+                    g.isHead == false && sacrificeGears.Contains(g) == false
+                );
+                var gear = listGears[random.Next(0, listGears.Count)];
+                gear.selectedSignImage.gameObject.SetActive(true);
+                sacrificeGears.Add(gear);
+            }
+        }
+
+        public void SeagullRandomGears()
+        {
+            System.Random random = new System.Random();
+            int count = random.Next(0, 3);
+            foreach (var gear in sacrificeGears)
+            {
+                gear.selectedSignImage.gameObject.SetActive(false);
+                if (gear.gearData != null && !string.IsNullOrEmpty(gear.gearData.itemName))
+                {
+                    gear.Hide();
+                    SacrificePoint++;
+                }
+            }
+            sacrificeGears = new List<GearController>();
+            if (_gearControllers.Count == 0)
+            {
+                return;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                var listGears = _gearControllers.FindAll(g =>
+                    g.isHead == false && sacrificeGears.Contains(g) == false
+                );
+                var gear = listGears[random.Next(0, listGears.Count)];
+                gear.selectedSignImage.gameObject.SetActive(true);
+                sacrificeGears.Add(gear);
+            }
         }
 
         public void CalculateSpeedOfGears()

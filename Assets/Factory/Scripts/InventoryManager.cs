@@ -15,7 +15,11 @@ public class InventoryManager : MonoBehaviour
 {
     public static InventoryManager Instance;
 
-    public Transform gui;
+    public Transform treasuresGUI;
+    public Transform normalTreasuresPopup;
+    public Transform specialTreasuresPopup;
+
+    public Transform inventoryGUI;
 
     [SerializeField]
     private GameObject _inventoryTopPopup;
@@ -39,9 +43,11 @@ public class InventoryManager : MonoBehaviour
     private TMP_Text _descriptionText;
 
     [SerializeField]
-    private TMP_Text _giftText;
+    private TMP_Text _ticketAmountText;
 
-    public Button buttonClose;
+    [SerializeField]
+    private TMP_Text _diamondText;
+
     public GameObject _inventoryBottomPopup;
     public GameObject _mask;
     public Slider slider;
@@ -63,6 +69,33 @@ public class InventoryManager : MonoBehaviour
     public ParticleSystem giftEffect;
     public System.Action<InventoryItemController> OnItemClicked;
     public System.Action<InventoryItemCard> OnCardClicked;
+
+    // Properties for tickets and diamonds using JSON save system
+    public int Tickets
+    {
+        get { return inventoryData?.tickets ?? 0; }
+        private set
+        {
+            if (inventoryData != null)
+            {
+                inventoryData.tickets = value;
+                SaveInventory();
+            }
+        }
+    }
+
+    public int Diamonds
+    {
+        get { return inventoryData?.diamonds ?? 0; }
+        private set
+        {
+            if (inventoryData != null)
+            {
+                inventoryData.diamonds = value;
+                SaveInventory();
+            }
+        }
+    }
 
     private void Awake()
     {
@@ -106,34 +139,32 @@ public class InventoryManager : MonoBehaviour
 
     void Start()
     {
-        UpdateGiftText();
+        UpdateTicketText();
+        UpdateDiamondText();
         OnItemClicked += SetCurrentItem;
-        if (_inventoryTopPopup != null)
-        {
-            HideTopPopup();
-        }
         OnCardClicked += (card) =>
         {
             if (card != null && card.itemData != null)
             {
-                if (card.isCoin)
+                // COMMENTED OUT GOLD/COIN LOGIC - Only item rewards now
+                // if (card.isCoin)
+                // {
+                //     System.Random random = new System.Random();
+                //     int gold = random.Next(1, 6);
+                //     GameManager.Instance.AddGold(gold);
+                // }
+                // else
+                // {
+                InventoryItemController itemController = inventoryItemControllers.Find(item =>
+                    item.itemData.id == card.itemData.id
+                );
+                if (itemController != null)
                 {
-                    System.Random random = new System.Random();
-                    int gold = random.Next(1, 6);
-                    GameManager.Instance.AddGold(gold);
+                    SetStackSizeOfItem(itemController);
+                    itemController.UpdateProgressbar();
+                    itemController.sparkleEffect.Play();
                 }
-                else
-                {
-                    InventoryItemController itemController = inventoryItemControllers.Find(item =>
-                        item.itemData.id == card.itemData.id
-                    );
-                    if (itemController != null)
-                    {
-                        SetStackSizeOfItem(itemController);
-                        itemController.UpdateProgressbar();
-                        itemController.sparkleEffect.Play();
-                    }
-                }
+                // }
                 SaveInventory();
                 DOVirtual.Float(
                     1,
@@ -157,20 +188,29 @@ public class InventoryManager : MonoBehaviour
                 );
                 card.GetComponent<CanvasGroup>().blocksRaycasts = false;
                 card.GetComponent<CanvasGroup>().interactable = false;
-                card.transform.DOScale(Vector3.zero, 0f)
-                    .SetEase(Ease.InCirc)
-                    .SetDelay(1f)
-                    .OnComplete(() =>
-                    {
-                        inventoryItemCards.Remove(card);
-                        Destroy(card.gameObject);
-                        if (inventoryItemCards.Count < 1)
-                        {
-                            ShowTopPopup();
-                        }
-                    });
+                card.transform.DOScale(Vector3.zero, 0f).SetEase(Ease.InCirc).SetDelay(1f);
+                
+                // Check if there are any more clickable cards after a delay
+                DOVirtual.DelayedCall(1.5f, () =>
+                {
+                    CheckAndShowTreasuresIfNoClickableCards();
+                });
             }
         };
+    }
+
+    public void SwapTreasuresPopup(bool isSpecial)
+    {
+        if (isSpecial)
+        {
+            normalTreasuresPopup.gameObject.SetActive(false);
+            specialTreasuresPopup.gameObject.SetActive(true);
+        }
+        else
+        {
+            normalTreasuresPopup.gameObject.SetActive(true);
+            specialTreasuresPopup.gameObject.SetActive(false);
+        }
     }
 
     public void SetSliderValue(float value)
@@ -214,50 +254,36 @@ public class InventoryManager : MonoBehaviour
 
     public void ShowInventory()
     {
-        gui.gameObject.SetActive(true);
+        inventoryGUI.gameObject.SetActive(true);
         if (_inventoryBottomPopup != null)
         {
             _inventoryBottomPopup.SetActive(true);
-            _mask.SetActive(true);
-            _mask.GetComponent<Image>().color = new Color32(100, 75, 30, 255);
-            _mask.GetComponent<Image>().DOFade(0.95f, 0.4f).SetEase(Ease.InSine);
             _inventoryBottomPopup.transform.localScale = Vector3.one;
-            _inventoryBottomPopup.transform.DOLocalMoveX(0, 0.4f).SetEase(Ease.InSine);
             LoadInventory();
+
+            // Set first item as current item and show top popup
+            if (inventoryItemControllers.Count > 0)
+            {
+                SetCurrentItem(inventoryItemControllers[0]);
+                ShowTopPopup();
+            }
         }
     }
 
     public async Task Close()
     {
-        HideTopPopup();
-        buttonClose
-            .transform.DOLocalRotate(new Vector3(0, 0, 360), 0.3f, RotateMode.LocalAxisAdd)
-            .SetEase(Ease.InSine);
         inventoryItemControllers.ForEach(item => item.HideFrame());
         inventoryItemCards.ForEach(card => Destroy(card.gameObject));
         inventoryItemCards.Clear();
-        _inventoryBottomPopup
-            .transform.DOLocalMoveX(Screen.width * 2 + 100, 0.4f)
-            .SetEase(Ease.InSine);
-        _mask
-            .GetComponent<Image>()
-            .DOFade(0, 0.4f)
-            .SetEase(Ease.InSine)
-            .OnComplete(() =>
-            {
-                _mask.SetActive(false);
-                _inventoryBottomPopup.SetActive(false);
-            });
-        await Task.Delay(500);
-        gui.gameObject.SetActive(false);
+
+        _inventoryBottomPopup.SetActive(false);
+        inventoryGUI.gameObject.SetActive(false);
     }
 
     public void ShowTopPopup()
     {
         if (_inventoryTopPopup != null)
         {
-            _inventoryTopPopup.transform.DOLocalMoveX(0, 0.4f).SetEase(Ease.InSine);
-
             // Find the first active item to set as current
             InventoryItemController firstActiveItem = inventoryItemControllers.FirstOrDefault(
                 item => item.isItemActive
@@ -271,16 +297,6 @@ public class InventoryManager : MonoBehaviour
                 // If no active items, still set the first one as current
                 SetCurrentItem(inventoryItemControllers[0]);
             }
-
-            buttonClose.gameObject.SetActive(true);
-        }
-    }
-
-    public void HideTopPopup()
-    {
-        if (_inventoryTopPopup != null)
-        {
-            _inventoryTopPopup.transform.DOLocalMoveX(Screen.width * 2, 0.4f).SetEase(Ease.InSine);
         }
     }
 
@@ -432,7 +448,7 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    public async void InitInventoryItemControllers()
+    public void InitInventoryItemControllers()
     {
         foreach (var itemData in inventoryData.items)
         {
@@ -485,7 +501,10 @@ public class InventoryManager : MonoBehaviour
     {
         try
         {
-            int giftAmount = inventoryData.giftAmount;
+            // Preserve current tickets and diamonds values
+            int currentTickets = inventoryData?.tickets ?? 0;
+            int currentDiamonds = inventoryData?.diamonds ?? 0;
+
             inventoryData = new ListInventoryItemData();
             foreach (var item in inventoryItemControllers)
             {
@@ -494,7 +513,11 @@ public class InventoryManager : MonoBehaviour
                     inventoryData.items.Add(item.itemData);
                 }
             }
-            inventoryData.giftAmount = giftAmount;
+
+            // Restore tickets and diamonds
+            inventoryData.tickets = currentTickets;
+            inventoryData.diamonds = currentDiamonds;
+
             string jsonData = JsonUtility.ToJson(inventoryData, true);
             File.WriteAllText(saveFilePath, jsonData);
             Debug.Log("Inventory saved successfully");
@@ -533,14 +556,23 @@ public class InventoryManager : MonoBehaviour
         return false;
     }
 
-    [ContextMenu("Update Gift Text")]
-    public void UpdateGiftText()
+    [ContextMenu("Update Ticket Text")]
+    public void UpdateTicketText()
     {
-        if (_giftText != null && inventoryData != null)
+        if (_ticketAmountText != null && inventoryData != null)
         {
-            _giftText.text =
-                inventoryData.giftAmount > 0 ? inventoryData.giftAmount.ToString() : "";
-            Debug.Log("Gift text updated: " + inventoryData.giftAmount);
+            _ticketAmountText.text = Tickets > 0 ? Tickets.ToString() : "0";
+            Debug.Log("Ticket text updated: " + Tickets);
+        }
+    }
+
+    [ContextMenu("Update Diamond Text")]
+    public void UpdateDiamondText()
+    {
+        if (_diamondText != null && inventoryData != null)
+        {
+            _diamondText.text = Diamonds > 0 ? Diamonds.ToString() : "0";
+            Debug.Log("Diamond text updated: " + Diamonds);
         }
     }
 
@@ -549,23 +581,189 @@ public class InventoryManager : MonoBehaviour
         return inventoryData;
     }
 
-    public void AddGift(int amount)
+    public void RollNormalCards(int amount = 1)
     {
-        int currentAmount = inventoryData.giftAmount;
-        inventoryData.giftAmount = Mathf.Clamp(currentAmount + amount, 0, 999);
-        SaveInventory();
+        // Check if we have enough tickets
+        if (Tickets < amount)
+        {
+            Debug.LogWarning($"Not enough tickets to roll {amount} cards. Available: {Tickets}");
+            return;
+        }
 
-        Invoke(nameof(UpdateGiftText), 1f);
-        giftEffect.emission.SetBurst(0, new ParticleSystem.Burst(amount, 1));
-        giftEffect.Play();
+        // Spend tickets based on amount
+        if (SpendTickets(amount))
+        {
+            if (amount == 1)
+            {
+                Roll1Card();
+            }
+            else if (amount == 10)
+            {
+                Roll10Cards();
+            }
+        }
+    }
+
+    public void RollDiamondCards(int amount)
+    {
+        int diamondCost = amount * 10; // Each roll costs 10 diamonds
+        
+        // Check if we have enough diamonds
+        if (Diamonds < diamondCost)
+        {
+            Debug.LogWarning($"Not enough diamonds to roll {amount} cards. Need: {diamondCost}, Available: {Diamonds}");
+            return;
+        }
+
+        // Spend diamonds based on amount x 10
+        if (SpendDiamonds(diamondCost))
+        {
+            if (amount == 1)
+            {
+                Roll1Card();
+            }
+            else if (amount == 10)
+            {
+                Roll10Cards();
+            }
+        }
+    }
+
+    public async Task Roll1Card()
+    {
+        // Hide treasure popups when rolling
+        HidePopups();
+
+        System.Random random = new System.Random();
+
+        // 50% chance for gold, 50% chance for card - COMMENTED OUT GOLD LOGIC
+        // bool isGold = random.Next(0, 2) == 0;
+
+        // if (isGold)
+        // {
+        //     // Give random gold between 1-10
+        //     int goldAmount = random.Next(1, 11);
+        //     GameManager.Instance.AddGold(goldAmount);
+        //     Debug.Log($"Rolled gold: {goldAmount}");
+
+        //     // Create and show coin card
+        //     var coin = Instantiate(coinPrefab, cardContainer);
+        //     coin.transform.SetParent(cardContainer);
+        //     coin.transform.localScale = Vector3.one;
+        //     coin.GetComponent<RectTransform>().anchoredPosition = new Vector2(
+        //         -1000,
+        //         random.Next(-200, 200)
+        //     );
+        //     coin.GetComponent<RectTransform>()
+        //         .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
+        //         .SetEase(Ease.OutQuint);
+        //     coin.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
+        //         .SetEase(Ease.OutBack);
+        //     coin.isCoin = true;
+        //     coin.canClick = true;
+        //     inventoryItemCards.Add(coin);
+        // }
+        // else
+        // {
+        // Always give card instead of random gold/card
+        int randomIndex = random.Next(inventoryData.items.Count);
+        InventoryItemData itemData = inventoryData.items[randomIndex];
+
+        InventoryItemCard card = Instantiate(cardPrefab, cardContainer)
+            .GetComponent<InventoryItemCard>();
+        card.itemData.CopyFrom(itemData);
+        card.ShowCard(itemData);
+        card.GetComponent<RectTransform>().anchoredPosition = new Vector2(
+            -1000,
+            random.Next(-200, 200)
+        );
+        card.GetComponent<RectTransform>()
+            .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
+            .SetEase(Ease.OutQuint);
+        card.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
+            .SetEase(Ease.OutBack);
+        inventoryItemCards.Add(card);
+
+        Debug.Log($"Rolled card: {itemData.name}");
+        // }
+
+        await Task.Delay(100); // Small delay for animation
+    }
+
+    public async Task Roll10Cards()
+    {
+        // Hide treasure popups when rolling
+        HidePopups();
+
+        System.Random random = new System.Random();
+
+        for (int i = 0; i < 10; i++)
+        {
+            // 50% chance for gold, 50% chance for card for each roll - COMMENTED OUT GOLD LOGIC
+            // bool isGold = random.Next(0, 2) == 0;
+
+            // if (isGold)
+            // {
+            //     // Give random gold between 1-10
+            //     int goldAmount = random.Next(1, 11);
+            //     GameManager.Instance.AddGold(goldAmount);
+            //     Debug.Log($"Roll {i + 1}: Rolled gold: {goldAmount}");
+
+            //     // Create and show coin card
+            //     var coin = Instantiate(coinPrefab, cardContainer);
+            //     coin.transform.SetParent(cardContainer);
+            //     coin.transform.localScale = Vector3.one;
+            //     coin.GetComponent<RectTransform>().anchoredPosition = new Vector2(
+            //         -1000,
+            //         random.Next(-200, 200)
+            //     );
+            //     coin.GetComponent<RectTransform>()
+            //         .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
+            //         .SetEase(Ease.OutQuint);
+            //     coin.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
+            //         .SetEase(Ease.OutBack);
+            //     coin.isCoin = true;
+            //     coin.canClick = true;
+            //     inventoryItemCards.Add(coin);
+            // }
+            // else
+            // {
+            // Always give card instead of random gold/card
+            int randomIndex = random.Next(inventoryData.items.Count);
+            InventoryItemData itemData = inventoryData.items[randomIndex];
+
+            InventoryItemCard card = Instantiate(cardPrefab, cardContainer)
+                .GetComponent<InventoryItemCard>();
+            card.itemData.CopyFrom(itemData);
+            card.ShowCard(itemData);
+            card.GetComponent<RectTransform>().anchoredPosition = new Vector2(
+                -1000,
+                random.Next(-200, 200)
+            );
+            card.GetComponent<RectTransform>()
+                .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
+                .SetEase(Ease.OutQuint);
+            card.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
+                .SetEase(Ease.OutBack);
+            inventoryItemCards.Add(card);
+
+            Debug.Log($"Roll {i + 1}: Rolled card: {itemData.name}");
+            // }
+
+            // Add delay between each card reveal
+            await Task.Delay(150);
+        }
     }
 
     public async Task ShowRewardCards()
     {
+        // Hide treasure popups when showing reward cards
+        HidePopups();
+        
         System.Random random = new System.Random();
         List<InventoryItemData> rewardItems = new List<InventoryItemData>();
-        int cardAmount = random.Next(0, inventoryData.giftAmount); // Randomly choose between 1 and 10 cards
-        Debug.Log($"Showing {cardAmount} reward cards of {inventoryData.giftAmount} total gifts");
+        int cardAmount = random.Next(0, Diamonds); // Use new Diamonds property
+        Debug.Log($"Showing {cardAmount} reward cards of {Diamonds} total diamonds");
         if (inventoryData != null)
         {
             // Check if there are any items with level > 1 and current stack > 0
@@ -625,38 +823,213 @@ public class InventoryManager : MonoBehaviour
                 card.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
                     .SetEase(Ease.OutBack);
                 inventoryItemCards.Add(card);
-                inventoryData.giftAmount--;
-                UpdateGiftText();
-                SaveInventory();
+                SpendDiamonds(1); // Use new diamond system
             }
         }
-        int randomCoin = inventoryData.giftAmount;
-        Debug.Log($"Random coins to spawn: {randomCoin} while {inventoryData.giftAmount} cards exist");
-        if (randomCoin <= 0 && inventoryItemCards.Count == 0)
+        // COMMENTED OUT GOLD/COIN LOGIC - Only item rewards now
+        // int remainingDiamonds = Diamonds;
+        // Debug.Log($"Random coins to spawn: {remainingDiamonds} while {Diamonds} diamonds exist");
+        // if (remainingDiamonds <= 0 && inventoryItemCards.Count == 0)
+        // {
+        //     ShowTopPopup();
+        //     return; // No coins if no items to show
+        // }
+        // for (int i = 0; i < remainingDiamonds; i++)
+        // {
+        //     var coin = Instantiate(coinPrefab, cardContainer);
+        //     coin.transform.SetParent(cardContainer);
+        //     coin.transform.localScale = Vector3.one;
+        //     coin.GetComponent<RectTransform>().anchoredPosition = new Vector2(
+        //         -1000,
+        //         random.Next(-200, 200)
+        //     );
+        //     coin.GetComponent<RectTransform>()
+        //         .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
+        //         .SetEase(Ease.OutQuint);
+        //     coin.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
+        //         .SetEase(Ease.OutBack);
+        //     coin.isCoin = true;
+        //     coin.canClick = true;
+        //     inventoryItemCards.Add(coin);
+        // }
+        // // Spend all remaining diamonds at once
+        // if (remainingDiamonds > 0)
+        // {
+        //     SpendDiamonds(remainingDiamonds);
+        // }
+    }
+
+    // Methods to manage tickets
+    public void AddTickets(int amount)
+    {
+        if (amount > 0)
         {
-            ShowTopPopup();
-            return; // No coins if no items to show
+            int newAmount = Mathf.Clamp(Tickets + amount, 0, 999999);
+            Tickets = newAmount;
+            Debug.Log($"Added {amount} tickets. Total: {Tickets}");
+            UpdateTicketText(); // Update UI when tickets change
         }
-        for (int i = 0; i < randomCoin; i++)
+    }
+
+    public bool SpendTickets(int amount)
+    {
+        if (amount <= 0)
         {
-            var coin = Instantiate(coinPrefab, cardContainer);
-            coin.transform.SetParent(cardContainer);
-            coin.transform.localScale = Vector3.one;
-            coin.GetComponent<RectTransform>().anchoredPosition = new Vector2(
-                -1000,
-                random.Next(-200, 200)
-            );
-            coin.GetComponent<RectTransform>()
-                .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
-                .SetEase(Ease.OutQuint);
-            coin.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
-                .SetEase(Ease.OutBack);
-            coin.isCoin = true;
-            coin.canClick = true;
-            inventoryItemCards.Add(coin);
-            inventoryData.giftAmount--;
-            UpdateGiftText();
-            SaveInventory();
+            Debug.LogWarning("Cannot spend negative or zero tickets");
+            return false;
+        }
+
+        if (Tickets >= amount)
+        {
+            Tickets = Tickets - amount;
+            Debug.Log($"Spent {amount} tickets. Remaining: {Tickets}");
+            UpdateTicketText(); // Update UI when tickets change
+            return true;
+        }
+        else
+        {
+            Debug.LogWarning($"Not enough tickets. Need: {amount}, Have: {Tickets}");
+            return false;
+        }
+    }
+
+    // Methods to manage diamonds
+    public void AddDiamonds(int amount)
+    {
+        if (amount > 0)
+        {
+            int newAmount = Mathf.Clamp(Diamonds + amount, 0, 999999);
+            Diamonds = newAmount;
+            Debug.Log($"Added {amount} diamonds. Total: {Diamonds}");
+            UpdateDiamondText(); // Update UI when diamonds change
+        }
+    }
+
+    public bool SpendDiamonds(int amount)
+    {
+        if (amount <= 0)
+        {
+            Debug.LogWarning("Cannot spend negative or zero diamonds");
+            return false;
+        }
+
+        if (Diamonds >= amount)
+        {
+            Diamonds = Diamonds - amount;
+            Debug.Log($"Spent {amount} diamonds. Remaining: {Diamonds}");
+            UpdateDiamondText(); // Update UI when diamonds change
+            return true;
+        }
+        else
+        {
+            Debug.LogWarning($"Not enough diamonds. Need: {amount}, Have: {Diamonds}");
+            return false;
+        }
+    }
+
+    // Get current amounts
+    public int GetTickets()
+    {
+        return Tickets;
+    }
+
+    public int GetDiamonds()
+    {
+        return Diamonds;
+    }
+
+    // Context menu methods for testing
+    [ContextMenu("Add 10 Tickets")]
+    public void DebugAddTickets()
+    {
+        AddTickets(10);
+    }
+
+    [ContextMenu("Add 5 Diamonds")]
+    public void DebugAddDiamonds()
+    {
+        AddDiamonds(5);
+    }
+
+    [ContextMenu("Show Currency")]
+    public void DebugShowCurrency()
+    {
+        Debug.Log($"Tickets: {Tickets}, Diamonds: {Diamonds}");
+    }
+
+    public void ShowTreasures()
+    {
+        if (treasuresGUI != null)
+        {
+            treasuresGUI.gameObject.SetActive(true);
+            normalTreasuresPopup.gameObject.SetActive(true);
+            specialTreasuresPopup.gameObject.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("Treasures GUI is not set up correctly.");
+        }
+    }
+
+    public void HideTreasures()
+    {
+        if (treasuresGUI != null)
+        {
+            treasuresGUI.gameObject.SetActive(false);
+            normalTreasuresPopup.gameObject.SetActive(false);
+            specialTreasuresPopup.gameObject.SetActive(false);
+        }
+    }
+
+    public void HidePopups() // normal and special treasures
+    {
+        if (treasuresGUI != null)
+        {
+            normalTreasuresPopup.gameObject.SetActive(false);
+            specialTreasuresPopup.gameObject.SetActive(false);
+        }
+    }
+
+    public void ShowSpecialTreasures()
+    {
+        if (treasuresGUI != null)
+        {
+            treasuresGUI.gameObject.SetActive(true);
+            normalTreasuresPopup.gameObject.SetActive(false);
+            specialTreasuresPopup.gameObject.SetActive(true);
+        }
+        else
+        {
+            Debug.LogError("Treasures GUI is not set up correctly.");
+        }
+    }
+
+    public void HideSpecialTreasures()
+    {
+        if (treasuresGUI != null)
+        {
+            specialTreasuresPopup.gameObject.SetActive(false);
+        }
+    }
+
+    // Check if there are any clickable cards remaining, if not show treasure popups
+    private void CheckAndShowTreasuresIfNoClickableCards()
+    {
+        // Count clickable cards (cards that have canClick = true and are interactable)
+        int clickableCards = 0;
+        foreach (var card in inventoryItemCards)
+        {
+            if (card != null && card.canClick && card.GetComponent<CanvasGroup>().interactable)
+            {
+                clickableCards++;
+            }
+        }
+
+        // If no clickable cards remain, show treasure popups
+        if (clickableCards == 0)
+        {
+            Debug.Log("No more clickable cards found, showing treasure popups");
+            ShowTreasures();
         }
     }
 }
@@ -665,7 +1038,8 @@ public class InventoryManager : MonoBehaviour
 public class ListInventoryItemData
 {
     public List<InventoryItemData> items = new List<InventoryItemData>();
-    public int giftAmount;
+    public int diamonds;
+    public int tickets;
 }
 
 [Serializable]
