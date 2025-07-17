@@ -312,7 +312,7 @@ namespace Factory
                 _currentLevelConfig.maxTotalFishHP * (1 + (long)(0.3f * Mathf.Pow(2, currentDay)));
             totalHP += dayConfiguration.maxInPool;
             Debug.Log($"Max Total Fish HP: {_currentLevelConfig.maxTotalFishHP}");
-            await homeUI.ShowGameStartPanel();
+            // await homeUI.ShowGameStartPanel();
             InitFishes(dayConfiguration.fishConfigs);
             Debug.Log($"UpdateGold + {_currentLevelConfig.initialLevelCurrency}");
             homeUI.UpdateDay();
