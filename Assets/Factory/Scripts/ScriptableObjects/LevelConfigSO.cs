@@ -109,7 +109,7 @@ namespace Factory
                     continue;
                 }
                 fish.fishConfig.Copy(fishConfig);
-                totalWeight += fishConfig.weight;
+                totalWeight += fishConfig.weight * fish.amount;
             }
             if (totalWeight == 0)
             {
@@ -120,14 +120,9 @@ namespace Factory
 
             foreach (var fish in newDayConfiguration.fishConfigs)
             {
-                fish.fishConfig.percentHP =
-                    (fish.fishConfig.weight / (float)totalWeight) * moneyOfDay / (float)fish.amount;
+                fish.fishConfig.percentHP = (fish.fishConfig.weight / (float)totalWeight);
                 fish.fishConfig.fishCurrencyValue = Mathf.Max(
-                    Mathf.RoundToInt(
-                        (fish.fishConfig.weight / (float)totalWeight)
-                            * moneyOfDay
-                            / (float)fish.amount
-                    ),
+                    Mathf.RoundToInt(fish.fishConfig.percentHP * maxTotalFishHP),
                     1
                 );
                 fish.fishConfig.dropCoinValue = Mathf.Max(
