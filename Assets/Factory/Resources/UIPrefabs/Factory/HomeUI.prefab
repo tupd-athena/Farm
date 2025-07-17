@@ -50488,7 +50488,10 @@ MonoBehaviour:
     priceStrikethrough: 0
     panelImage: {fileID: 6211434809399740968}
     priceImage: {fileID: 8352453370656150406}
-  _artifacts: []
+  _artifacts:
+  - {fileID: 5238736943848226893}
+  - {fileID: 6307681688012521666}
+  - {fileID: 785921534494766975}
 --- !u!1 &4125899493869616315
 GameObject:
   m_ObjectHideFlags: 0
@@ -62747,7 +62750,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &6649138147724689619
 RectTransform:
   m_ObjectHideFlags: 0
@@ -99394,7 +99397,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6348019361679579298
 RectTransform:
   m_ObjectHideFlags: 0

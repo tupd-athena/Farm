@@ -282,7 +282,6 @@ namespace Factory
             // Give 5 diamonds every 5 days
             if (currentDay % 5 == 0 && currentDay > 0)
             {
-                InventoryManager.Instance.AddDiamonds(5);
                 for (int i = 0; i < 1; i++)
                 {
                     var diamond = Instantiate(Resources.Load<GameObject>("Prefabs/Diamond"));
