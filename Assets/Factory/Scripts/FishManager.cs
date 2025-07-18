@@ -56,7 +56,7 @@ namespace Factory
             transform.position = worldPosition;
         }
 
-        public void SpawnTextFloating(string text, Vector3 position)
+        public void SpawnTextFloating(string text)
         {
             var textObject = PoolSystem.Instance.GetObject("TextFloating");
             textObject.transform.SetParent(GameManager.Instance.homeUI.TotalGoldText.transform);
@@ -154,7 +154,7 @@ namespace Factory
             {
                 return;
             }
-            SpawnTextFloating(item.itemData.cost.ToString(), item.transform.position);
+            SpawnTextFloating(item.itemData.cost.ToString());
         }
 
         public async Task ClearFishes()

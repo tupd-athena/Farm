@@ -442,15 +442,16 @@ namespace Factory
                 coin.GetComponent<CoinController>().Active();
                 coin.GetComponent<CoinController>().OnComplete = () =>
                 {
+                    GameManager.Instance.AddGold(
+                        Mathf.Clamp(coin.GetComponent<CoinController>().value, 1, 999999)
+                    );
                     coin.GetComponent<CoinController>().value += (int)
                         CustomValueManager.Instance.GetCustomValueInGame(
                             CustomValueManager.FISH_GOLD_BONUS
                         );
                     FishManager.Instance.SpawnTextFloating(
-                        coin.GetComponent<CoinController>().value.ToString(),
-                        transform.position
+                        coin.GetComponent<CoinController>().value.ToString()
                     );
-                    GameManager.Instance.AddGold(coin.GetComponent<CoinController>().value);
                     PoolSystem.Instance.ReturnObject(gameObject, "Coin");
                     AudioManager.Instance.PlaySound("Coin");
                 };

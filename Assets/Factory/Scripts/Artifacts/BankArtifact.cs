@@ -62,8 +62,8 @@ public class BankArtifact : MonoBehaviour
                     CustomValueManager.Instance.GetCustomValueInGame(
                         CustomValueManager.FISH_GOLD_BONUS
                     );
-                FishManager.Instance.SpawnTextFloating(coin.GetComponent<CoinController>().value.ToString(), transform.position);
-                GameManager.Instance.AddGold(coin.GetComponent<CoinController>().value);
+                FishManager.Instance.SpawnTextFloating(coin.GetComponent<CoinController>().value.ToString());
+                GameManager.Instance.AddGold(Mathf.Clamp(coin.GetComponent<CoinController>().value, 1, 999999));
                 PoolSystem.Instance.ReturnObject(gameObject, "Coin");
                 AudioManager.Instance.PlaySound("Coin");
             };

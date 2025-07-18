@@ -42,15 +42,14 @@ namespace Factory
             CancelInvoke("OnClick");
             isCollected = true;
             transform.DOComplete();
-            OnCollect?.Invoke();
             transform
                 .DOMove(GameManager.Instance.homeUI.TotalGoldText.transform.position, 0.5f)
                 .SetEase(Ease.OutSine)
                 .OnComplete(() =>
                 {
                     OnComplete?.Invoke();
-                    
                 });
+            OnCollect?.Invoke();
         }
     }
 }
