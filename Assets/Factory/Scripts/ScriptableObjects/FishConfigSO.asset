@@ -15,11 +15,12 @@ MonoBehaviour:
   fishConfigs:
   - fishType: 0
     weight: 1
-    fishCurrencyValue: 0
+    fishCurrencyValue: 1
     patienceValue: 2
-    dropCoinValue: 0
+    dropCoinValue: 1
     percentDecrease: 2
     timeDecreasePerTick: 0
+    percentHP: 0.075
     fishPrefabName: Fish
     isBoss: 0
     sprites:
@@ -31,11 +32,12 @@ MonoBehaviour:
     moveArea: 1
   - fishType: 1
     weight: 2
-    fishCurrencyValue: 0
+    fishCurrencyValue: 1
     patienceValue: 3
-    dropCoinValue: 1
+    dropCoinValue: 2
     percentDecrease: 1
     timeDecreasePerTick: 0
+    percentHP: 0.24
     fishPrefabName: Fish
     isBoss: 0
     sprites:
@@ -47,11 +49,12 @@ MonoBehaviour:
     moveArea: 1
   - fishType: 2
     weight: 3
-    fishCurrencyValue: 0
+    fishCurrencyValue: 1
     patienceValue: 4
-    dropCoinValue: 1
+    dropCoinValue: 4
     percentDecrease: 1
     timeDecreasePerTick: 0
+    percentHP: 0.6
     fishPrefabName: Fish
     isBoss: 0
     sprites:
@@ -63,11 +66,12 @@ MonoBehaviour:
     moveArea: 0.7
   - fishType: 3
     weight: 5
-    fishCurrencyValue: 0
+    fishCurrencyValue: 1
     patienceValue: 5
-    dropCoinValue: 0
+    dropCoinValue: 3
     percentDecrease: 0.5
     timeDecreasePerTick: 0
+    percentHP: 0.375
     fishPrefabName: Fish
     isBoss: 0
     sprites:
@@ -84,6 +88,7 @@ MonoBehaviour:
     dropCoinValue: 0
     percentDecrease: 1
     timeDecreasePerTick: 0
+    percentHP: 1
     fishPrefabName: Fish
     isBoss: 0
     sprites:
@@ -95,11 +100,12 @@ MonoBehaviour:
     moveArea: 1
   - fishType: 5
     weight: 1
-    fishCurrencyValue: 0
+    fishCurrencyValue: 1
     patienceValue: 1
-    dropCoinValue: 0
+    dropCoinValue: 1
     percentDecrease: 1
     timeDecreasePerTick: 0
+    percentHP: 0.075
     fishPrefabName: Fish
     isBoss: 0
     sprites:
@@ -111,11 +117,12 @@ MonoBehaviour:
     moveArea: 2.5
   - fishType: 6
     weight: 0
-    fishCurrencyValue: 0
+    fishCurrencyValue: 1
     patienceValue: 3
-    dropCoinValue: 0
+    dropCoinValue: 1
     percentDecrease: 5
     timeDecreasePerTick: 0
+    percentHP: 0
     fishPrefabName: Squid
     isBoss: 1
     sprites:
@@ -127,17 +134,18 @@ MonoBehaviour:
     moveArea: 2
   - fishType: 7
     weight: 0
-    fishCurrencyValue: 0
+    fishCurrencyValue: 1
     patienceValue: 3
-    dropCoinValue: 0
+    dropCoinValue: 1
     percentDecrease: 30
     timeDecreasePerTick: 0
+    percentHP: 0
     fishPrefabName: Swordfish
     isBoss: 1
     sprites:
-    - percentHP: 100
+    - percentHP: 200
       sprite: {fileID: 21300000, guid: f656151c4167648bb8c8fab34da1f04a, type: 3}
-    speed: 1
+    speed: 5
     size: 1
     depth: -3
     moveArea: 2

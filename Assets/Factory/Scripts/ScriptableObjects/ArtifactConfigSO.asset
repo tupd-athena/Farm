@@ -51,7 +51,7 @@ MonoBehaviour:
     artifactLevel: 0
     values:
     - valueName: percentIncrease
-      value: 0.5
+      value: 0.2
     artifactType: 2
     artifactTypeData:
       artifactType: 0

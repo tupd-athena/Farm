@@ -21,7 +21,7 @@ MonoBehaviour:
     cost: 10
     description: Increase power of all connected gears.
     level: 1
-    baseValue: 0.2
+    baseValue: 0.05
     weight: 95
     size: 56
     hideInInventory: 0
