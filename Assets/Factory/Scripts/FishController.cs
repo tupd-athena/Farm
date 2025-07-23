@@ -276,6 +276,7 @@ namespace Factory
             _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
             FishManager.Instance.CheckWinLose();
             GameManager.Instance.totalHP--;
+            GamePlayTracking.Instance.AddByKey(GamePlayTracking.STARVED_FISH_COUNT, 1);
         }
 
         public virtual async Task FindTarget()
@@ -458,6 +459,7 @@ namespace Factory
 
                 CancelInvoke(nameof(DecreaseHPByTime));
                 FishManager.Instance.CheckWinLose();
+                GamePlayTracking.Instance.AddByKey(GamePlayTracking.FED_FISH_COUNT, 1);
                 if (FishManager.Instance.OnFishFull != null)
                 {
                     FishManager.Instance.OnFishFull(this);

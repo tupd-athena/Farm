@@ -26,6 +26,14 @@ public class GamePlayTracking : MonoBehaviour
     public const string CURRENT_GOLD = "CurrentGold";
     public const string CURRENT_BOSSES = "CurrentBosses";
 
+    // Additional tracking constants
+    public const string TOTAL_TIME = "TotalTime";
+    public const string FED_FISH_COUNT = "FedFishCount";
+    public const string STARVED_FISH_COUNT = "StarvedFishCount";
+    public const string TOTAL_COINS = "TotalCoins";
+    public const string TICKET_AMOUNT = "TicketAmount";
+    public const string DIAMOND_AMOUNT = "DiamondAmount";
+
     [Header("Current PlayerPrefs Values - Highest Stats")]
     [SerializeField]
     private int highestDay;
@@ -129,8 +137,16 @@ public class GamePlayTracking : MonoBehaviour
         PlayerPrefs.SetInt(key, currentValue + value);
     }
 
+    public void SetByKey(string key, int value)
+    {
+        PlayerPrefs.SetInt(key, value);
+        Save();
+        UpdateDisplayValues();
+    }
+
     public void Save()
     {
+        PlayerPrefs.SetInt(CURRENT_FISH, PlayerPrefs.GetInt(FED_FISH_COUNT, 0));
         PlayerPrefs.Save();
         if (PlayerPrefs.GetInt(HIGHEST_DAY_KEY, 0) < PlayerPrefs.GetInt(CURRENT_DAY, 1))
         {
@@ -148,12 +164,22 @@ public class GamePlayTracking : MonoBehaviour
         {
             PlayerPrefs.SetInt(HIGHEST_BOSSES, PlayerPrefs.GetInt(CURRENT_BOSSES, 0));
         }
+    }
 
-        // Update total statistics
+    public void UpdateTotalStats()
+    {
         AddByKey(TOTAL_DAYS, PlayerPrefs.GetInt(CURRENT_DAY, 1));
         AddByKey(TOTAL_FISH, PlayerPrefs.GetInt(CURRENT_FISH, 0));
         AddByKey(TOTAL_GOLD_COLLECTED, PlayerPrefs.GetInt(CURRENT_GOLD, 0));
         AddByKey(TOTAL_BOSSES_DEFEATED, PlayerPrefs.GetInt(CURRENT_BOSSES, 0));
+        AddByKey(
+            TOTAL_GOLD_SPENT,
+            PlayerPrefs.GetInt(CURRENT_GOLD, 0) - PlayerPrefs.GetInt(CURRENT_GOLD, 0)
+        );
+        AddByKey(
+            TOTAL_FISH_DEAD,
+            PlayerPrefs.GetInt(CURRENT_FISH, 0) - PlayerPrefs.GetInt(CURRENT_FISH, 0)
+        );
     }
 
     public int GetValueByKey(string key)
@@ -166,6 +192,7 @@ public class GamePlayTracking : MonoBehaviour
         if (gold > 0)
         {
             GamePlayTracking.Instance.AddByKey(GamePlayTracking.CURRENT_GOLD, gold);
+            PlayerPrefs.SetInt(TOTAL_COINS, PlayerPrefs.GetInt(CURRENT_GOLD, 0));
         }
         else
         {
@@ -202,6 +229,23 @@ public class GamePlayTracking : MonoBehaviour
         PlayerPrefs.SetInt(CURRENT_FISH, 0);
         PlayerPrefs.SetInt(CURRENT_GOLD, 0);
         PlayerPrefs.SetInt(CURRENT_BOSSES, 0);
+        PlayerPrefs.SetInt(FED_FISH_COUNT, 0);
+        PlayerPrefs.SetInt(STARVED_FISH_COUNT, 0);
+        PlayerPrefs.SetInt(TOTAL_COINS, 0);
+        PlayerPrefs.SetInt(TICKET_AMOUNT, 0);
+        PlayerPrefs.SetInt(DIAMOND_AMOUNT, 0);
+        Save();
+        UpdateDisplayValues();
+    }
+
+    // Methods for EndGamePopupController
+    public string GetTotalTime()
+    {
+        float totalTime =
+            PlayerPrefs.GetFloat("GameEndTime", 0f) - PlayerPrefs.GetFloat("GameStartTime", 0f);
+        int minutes = Mathf.FloorToInt(totalTime / 60f);
+        int seconds = Mathf.FloorToInt(totalTime % 60f);
+        return $"{minutes}M {seconds}S";
     }
 
     public void OnDestroy()

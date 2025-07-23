@@ -17,6 +17,7 @@ public class BankArtifact : MonoBehaviour
 
     private void Start()
     {
+        goldAmount = 0;
         goldText.text = goldAmount.ToString();
         bubble.transform.localScale = Vector3.zero;
 
@@ -24,6 +25,16 @@ public class BankArtifact : MonoBehaviour
         {
             AddGold(1);
         };
+    }
+    void OnEnable()
+    {
+        Init();
+    }
+
+    public void Init()
+    {
+        goldAmount = 0;
+        goldText.text = goldAmount.ToString();
     }
 
     public void AddGold(int amount)
@@ -64,7 +75,7 @@ public class BankArtifact : MonoBehaviour
                     );
                 FishManager.Instance.SpawnTextFloating(coin.GetComponent<CoinController>().value.ToString());
                 GameManager.Instance.AddGold(Mathf.Clamp(coin.GetComponent<CoinController>().value, 1, 999999));
-                PoolSystem.Instance.ReturnObject(gameObject, "Coin");
+                PoolSystem.Instance.ReturnObject(coin, "Coin");
                 AudioManager.Instance.PlaySound("Coin");
             };
             coin.GetComponent<CoinController>().Active();

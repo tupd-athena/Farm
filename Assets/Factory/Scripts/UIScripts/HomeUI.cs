@@ -67,6 +67,8 @@ namespace Factory
         private GameObject _wavePanel;
         [SerializeField]
         private GameObject _ticketPanel;
+        [SerializeField]
+        private EndGamePopupController _endGamePopupController;
         #endregion
 
         #region UI References - Text Elements
@@ -149,6 +151,7 @@ namespace Factory
         public GameObject WavePanel => _wavePanel;
         public RectTransform GoldContainer => _goldContainer;
         public GameObject TicketPanel => _ticketPanel;
+        public EndGamePopupController EndGamePopupController => _endGamePopupController;
         #endregion
 
         #region State

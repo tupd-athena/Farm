@@ -45,6 +45,7 @@ public class SquidController : FishController
             _spriteRenderer.material.SetFloat("_SwaySpeed", 0);
             FishManager.Instance.CheckWinLose();
             // InventoryManager.Instance.AddTickets(1);
+            GamePlayTracking.Instance.AddByKey(GamePlayTracking.CURRENT_BOSSES, 1);
             var ticket = Instantiate(Resources.Load<GameObject>("Prefabs/Ticket"));
             ticket.transform.position = transform.position;
             ticket.SetActive(true);

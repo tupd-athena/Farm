@@ -149,6 +149,7 @@ namespace Factory
             homeUI.HideArtifactPopup();
             homeUI.HideShopPopup();
             homeUI.WavePanel.SetActive(false);
+            homeUI.EndGamePopupController.HidePopup();
         }
 
         public void ResetArtifactTweens()
@@ -164,6 +165,7 @@ namespace Factory
             homeUI.WavePanel.SetActive(true);
             homeUI.GoldContainer.gameObject.SetActive(true);
             homeUI.buttonQuit.gameObject.SetActive(true);
+            PlayerPrefs.SetFloat("GameStartTime", Time.time);
             OnGameStart = null;
             _isFirstOpenShop = false;
             isStop = true;
@@ -253,7 +255,7 @@ namespace Factory
         {
             sumOfFishesHealth =
                 _currentLevelConfig.maxTotalFishHP
-                * (1 + (long)(_levelConfigSO.scaleTotalHP * Mathf.Pow(2, currentDay)));
+                * (1 + (long)(Mathf.Pow(_levelConfigSO.scaleTotalHP, currentDay)));
             return sumOfFishesHealth;
         }
 
@@ -261,7 +263,7 @@ namespace Factory
         {
             return (int)(
                 _currentLevelConfig.maxCoinDrop
-                * (float)Mathf.Clamp(Mathf.Pow(_levelConfigSO.scaleTotalHP, currentDay), 1, 5)
+                * (float)Mathf.Clamp(Mathf.Pow(_levelConfigSO.scaleCoinDrop, currentDay), 1, 5)
             );
         }
 
@@ -316,6 +318,7 @@ namespace Factory
             Debug.Log($"UpdateGold + {_currentLevelConfig.initialLevelCurrency}");
             homeUI.UpdateDay();
             // SacrificeRandomGears();
+            GamePlayTracking.Instance.SetByKey(GamePlayTracking.CURRENT_DAY, currentDay);
 
             ChangeGameState(GameStateType.Shop);
         }
@@ -367,7 +370,6 @@ namespace Factory
             CustomValueManager.Instance.ClearCustomValueInGame();
 
             // Reset game tracking
-            GamePlayTracking.Instance.ResetCurrentRunStats();
 
             // Reset UI state
             homeUI.UpdateGoldText(_gold);
@@ -377,17 +379,18 @@ namespace Factory
             homeUI.HideArtifactPopup();
             homeUI.HideShopPopup();
 
+            EndGame();
+        }
+
+        public void EndGame()
+        {
             // Deactivate dune object
+            PlayerPrefs.SetFloat("GameEndTime", Time.time);
+            GamePlayTracking.Instance.Save();
+            GamePlayTracking.Instance.UpdateTotalStats();
+
+            homeUI.EndGamePopupController.ShowPopup();
             _duneObject.SetActive(false);
-
-            // Reset game state to initial state
-            ChangeGameState(GameStateType.None);
-
-            // Clear any remaining event subscriptions
-            OnGameStart = null;
-
-            Debug.Log("Game completely ended and reset to initial state");
-            homeUI.NavigationBar.ShowAllTabsAndBar();
         }
 
         public void StartGame()

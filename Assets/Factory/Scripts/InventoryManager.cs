@@ -868,6 +868,7 @@ public class InventoryManager : MonoBehaviour
             Tickets = newAmount;
             Debug.Log($"Added {amount} tickets. Total: {Tickets}");
             UpdateTicketText(); // Update UI when tickets change
+            GamePlayTracking.Instance.AddByKey(GamePlayTracking.TICKET_AMOUNT, amount);
         }
     }
 
@@ -902,6 +903,7 @@ public class InventoryManager : MonoBehaviour
             Diamonds = newAmount;
             Debug.Log($"Added {amount} diamonds. Total: {Diamonds}");
             UpdateDiamondText(); // Update UI when diamonds change
+            GamePlayTracking.Instance.AddByKey(GamePlayTracking.DIAMOND_AMOUNT, amount);
         }
     }
 

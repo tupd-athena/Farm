@@ -127,6 +127,7 @@ public class SwordfishController : FishController
             AudioManager.Instance.PlaySound("Coin");
             Destroy(ticket); // Clean up the ticket object after use
         };
+        GamePlayTracking.Instance.AddByKey(GamePlayTracking.CURRENT_BOSSES, 1);
     }
     #endregion
 
