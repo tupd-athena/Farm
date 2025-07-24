@@ -80,6 +80,9 @@ namespace Atom
             public const string BI_DECOR_GAME_START = "bi_decor_game_start_detail";
             public const string BI_DECOR_GAME_OVER = "bi_decor_game_over_detail";
             public const string BUTTON_TAP = "button_tap";
+            public const string TUTORIAL = "tutorial";
+            public const string GAME_START = "game_start";
+            public const string GAME_OVER = "game_over";
         }
 
         public static class TrackingScreenName

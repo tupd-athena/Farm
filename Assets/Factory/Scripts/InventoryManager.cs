@@ -885,6 +885,7 @@ public class InventoryManager : MonoBehaviour
             Tickets = Tickets - amount;
             Debug.Log($"Spent {amount} tickets. Remaining: {Tickets}");
             UpdateTicketText(); // Update UI when tickets change
+            GamePlayTracking.Instance.TrackingSinkTicket("treasure",amount);
             return true;
         }
         else
@@ -920,6 +921,7 @@ public class InventoryManager : MonoBehaviour
             Diamonds = Diamonds - amount;
             Debug.Log($"Spent {amount} diamonds. Remaining: {Diamonds}");
             UpdateDiamondText(); // Update UI when diamonds change
+            GamePlayTracking.Instance.TrackingSinkDiamond("treasure",amount);
             return true;
         }
         else

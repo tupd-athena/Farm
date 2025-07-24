@@ -161,6 +161,7 @@ namespace Factory
 
         public async Task NewGame()
         {
+            GamePlayTracking.Instance?.IncreaseAttempts();
             homeUI.TicketPanel.SetActive(false);
             homeUI.WavePanel.SetActive(true);
             homeUI.GoldContainer.gameObject.SetActive(true);
@@ -177,6 +178,7 @@ namespace Factory
             totalHP = dayConfiguration.maxInPool;
             _gold = 0;
             GamePlayTracking.Instance.ResetCurrentRunStats();
+            GamePlayTracking.Instance.TrackingStartGame();
             _duneObject.SetActive(true);
             Debug.Log("new: 1");
             CustomValueManager.Instance.ClearCustomValueInGame();
@@ -280,20 +282,25 @@ namespace Factory
             ClearItems();
             currentDay++;
             dayConfiguration = GetDayConfig();
+            GamePlayTracking.Instance.TrackingStartGame();
 
-            // Give 5 diamonds every 5 days
+            // Give 1 diamonds every 5 days
             if (currentDay % 5 == 0 && currentDay > 0)
             {
                 for (int i = 0; i < 1; i++)
                 {
                     var diamond = Instantiate(Resources.Load<GameObject>("Prefabs/Diamond"));
+                    int amount = 1;
+                    string from = "newWaveReward";
                     diamond.transform.position = transform.position;
                     diamond.SetActive(true);
-                    diamond.GetComponent<CoinController>().value = 1;
+                    diamond.GetComponent<CoinController>().value = amount;
                     diamond.GetComponent<CoinController>().Active();
                     diamond.GetComponent<CoinController>().OnComplete = () =>
                     {
-                        InventoryManager.Instance.AddDiamonds(1);
+                        InventoryManager.Instance.AddDiamonds(amount);
+                        GamePlayTracking.Instance.TrackingSourceDiamond(from, amount);
+
                         AudioManager.Instance.PlaySound("Coin");
                         Destroy(diamond); // Clean up the ticket object after use
                     };
@@ -327,6 +334,7 @@ namespace Factory
         {
             // Stop all game activities immediately
             isStop = true;
+            GamePlayTracking.Instance.TrackingEndGame();
 
             // Clear all active game objects
             await FishManager.Instance.ClearFishes();
@@ -979,6 +987,7 @@ namespace Factory
                         CustomValueManager.HEART_BONUS,
                         artifactData.GetValueByName("value")
                     );
+                    totalHP += (int)artifactData.GetValueByName("value");
                     FishManager.Instance.UpdateFishCountText();
                     artifacts[5].SetActive(true);
                     break;

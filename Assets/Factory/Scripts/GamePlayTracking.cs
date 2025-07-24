@@ -1,5 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using Athena.GameOps;
+using Atom;
+using Factory;
 using UnityEngine;
 
 public class GamePlayTracking : MonoBehaviour
@@ -252,4 +255,268 @@ public class GamePlayTracking : MonoBehaviour
     {
         Save();
     }
+
+    #region SDK Tracking Methods
+
+    //missing params here
+
+    public const string KEY_LEVEL_ATTEMPT = "level_attempt";
+    private System.DateTime _lastTimeSpentCountStart;
+    private bool _isTimeSpentCounterValid;
+    private int _timeSpent;
+    private int _attempts;
+    private int _rewardCoin;
+
+    private string _gameMode;
+    private string _levelId;
+    private string _levelUniqueId;
+
+    private const float LOADING_MINIMUM_TIME = 2.0f;
+    private float _loadingStartTime;
+
+    private void OnAppPaused(bool pausedStatus)
+    {
+        if (pausedStatus)
+        {
+            AccumulateTimeSpent();
+            TrackingManager.Instance.TrackGameOver(
+                _gameMode,
+                _levelUniqueId,
+                _levelId,
+                _timeSpent,
+                "null",
+                1,
+                _attempts,
+                "null"
+            );
+        }
+        else
+        {
+            StartCountingTimeSpent();
+        }
+    }
+
+    public void IncreaseAttempts()
+    {
+        _attempts = PlayerPrefs.GetInt(KEY_LEVEL_ATTEMPT, 0) + 1;
+        PlayerPrefs.SetInt(KEY_LEVEL_ATTEMPT, _attempts);
+        Debug.Log($"Attempts increased to: {_attempts}");
+    }
+
+    private void StartCountingTimeSpent()
+    {
+        _lastTimeSpentCountStart = System.DateTime.UtcNow;
+        _isTimeSpentCounterValid = true;
+        _timeSpent = 0;
+    }
+
+    private void AccumulateTimeSpent()
+    {
+        if (_isTimeSpentCounterValid)
+        {
+            var seconds = (int)(System.DateTime.UtcNow - _lastTimeSpentCountStart).TotalSeconds;
+            _timeSpent = seconds;
+            _isTimeSpentCounterValid = false;
+        }
+    }
+
+    public void TrackingStartGame()
+    {
+        _attempts = PlayerPrefs.GetInt(KEY_LEVEL_ATTEMPT, 0);
+
+        _gameMode = "Normal";
+        _timeSpent = 0;
+        StartCountingTimeSpent();
+
+        var toDayString =
+            $"{_lastTimeSpentCountStart.Year}{_lastTimeSpentCountStart.Month:00}{_lastTimeSpentCountStart.Day:00}";
+
+        _levelId = GameManager.Instance.currentDay.ToString();
+        _levelUniqueId = $"{_levelId}i{_attempts}a{toDayString}d";
+
+        AthenaApp.Instance.AnalyticsManager.TrackEventWithParameters(
+            Global.TrackingEventName.GAME_START,
+            new Dictionary<string, object>()
+            {
+                { "game_mode", _gameMode },
+                { "ID", _levelUniqueId },
+                { "level_id", _levelId },
+                { "attempts", _attempts },
+            }
+        );
+        Debug.Log(
+            $"Tracking Start Game: Game Mode: {_gameMode}, Level ID: {_levelId}, Unique ID: {_levelUniqueId}, Attempts: {_attempts}"
+        );
+    }
+
+    public void TrackingEndGame()
+    {
+        if (_isTimeSpentCounterValid)
+        {
+            var seconds = (int)(System.DateTime.UtcNow - _lastTimeSpentCountStart).TotalSeconds;
+            _timeSpent = seconds;
+            _isTimeSpentCounterValid = false;
+        }
+        StartCountingTimeSpent();
+        var levelAbandoned = GameManager.Instance.currentDay;
+        var result = "null";
+        var loseCause = "null";
+
+        AthenaApp.Instance.AnalyticsManager.TrackEventWithParameters(
+            Global.TrackingEventName.GAME_OVER,
+            new Dictionary<string, object>()
+            {
+                { "game_mode", _gameMode },
+                { "ID", _levelUniqueId },
+                { "level_id", _levelId },
+                { "time_spent", _timeSpent },
+                { "context", result },
+                { "level_abandoned", levelAbandoned },
+                { "attempts", _attempts },
+                { "lose_cause", loseCause },
+            }
+        );
+        Debug.Log(
+            $"Tracking End Game: Game Mode: {_gameMode}, Level ID: {_levelId}, Unique ID: {_levelUniqueId}, Time Spent: {_timeSpent}, Attempts: {_attempts}"
+        );
+    }
+
+    public void TrackingSourceDiamond(string from, int diamond)
+    {
+        var gameState = GameManager.Instance.GameState.CurrentState;
+        var levelId = _levelId;
+        if (gameState == GameStateType.None)
+        {
+            levelId = "null";
+        }
+        if (diamond > 0)
+        {
+            TrackingManager.Instance.TrackSourceResourceEvent(
+                from,
+                "Diamond",
+                diamond,
+                levelId,
+                InventoryManager.Instance.GetDiamonds()
+            );
+            Debug.Log(
+                $"Tracking Source Diamond: From: {from}, Diamond: {diamond}, Level ID: {levelId}, Balance: {InventoryManager.Instance.GetDiamonds()}"
+            );
+        }
+    }
+
+    public void TrackingSourceGold(string from, int coin)
+    {
+        var gameState = GameManager.Instance.GameState.CurrentState;
+        var levelId = _levelId;
+        if (gameState == GameStateType.None)
+        {
+            levelId = "null";
+        }
+        if (coin > 0)
+        {
+            TrackingManager.Instance.TrackSourceResourceEvent(
+                from,
+                "Common",
+                coin,
+                levelId,
+                PlayerPrefs.GetInt(CURRENT_GOLD, 0)
+            );
+            Debug.Log(
+                $"Tracking Source Gold: From: {from}, Coin: {coin}, Level ID: {levelId}, Balance: {PlayerPrefs.GetInt(CURRENT_GOLD, 0)}"
+            );
+        }
+    }
+
+    public void TrackingSourceTicket(string from, int ticket)
+    {
+        var gameState = GameManager.Instance.GameState.CurrentState;
+        var levelId = _levelId;
+        if (gameState == GameStateType.None)
+        {
+            levelId = "null";
+        }
+        if (ticket > 0)
+        {
+            TrackingManager.Instance.TrackSourceResourceEvent(
+                from,
+                "Ticket",
+                ticket,
+                levelId,
+                InventoryManager.Instance.GetTickets()
+            );
+            Debug.Log(
+                $"Tracking Source Ticket: From: {from}, Ticket: {ticket}, Level ID: {levelId}, Balance: {InventoryManager.Instance.GetTickets()}"
+            );
+        }
+    }
+
+    public void TrackingSinkDiamond(string to, int diamond)
+    {
+        var gameState = GameManager.Instance.GameState.CurrentState;
+        var levelId = _levelId;
+        if (gameState == GameStateType.None)
+        {
+            levelId = "null";
+        }
+        if (diamond > 0)
+        {
+            TrackingManager.Instance.TrackSinkResourceEvent(
+                to,
+                "Diamond",
+                diamond,
+                levelId,
+                InventoryManager.Instance.GetDiamonds()
+            );
+            Debug.Log(
+                $"Tracking Sink Diamond: To: {to}, Diamond: {diamond}, Level ID: {levelId}, Balance: {InventoryManager.Instance.GetDiamonds()}"
+            );
+        }
+    }
+
+    public void TrackingSinkGold(string to, int coin)
+    {
+        var gameState = GameManager.Instance.GameState.CurrentState;
+        var levelId = _levelId;
+        if (gameState == GameStateType.None)
+        {
+            levelId = "null";
+        }
+        if (coin > 0)
+        {
+            TrackingManager.Instance.TrackSinkResourceEvent(
+                to,
+                "Common",
+                coin,
+                levelId,
+                PlayerPrefs.GetInt(CURRENT_GOLD, 0)
+            );
+            Debug.Log(
+                $"Tracking Sink Gold: To: {to}, Coin: {coin}, Level ID: {levelId}, Balance: {PlayerPrefs.GetInt(CURRENT_GOLD, 0)}"
+            );
+        }
+    }
+
+    public void TrackingSinkTicket(string to, int ticket)
+    {
+        var gameState = GameManager.Instance.GameState.CurrentState;
+        var levelId = _levelId;
+        if (gameState == GameStateType.None)
+        {
+            levelId = "null";
+        }
+        if (ticket > 0)
+        {
+            TrackingManager.Instance.TrackSinkResourceEvent(
+                to,
+                "Ticket",
+                ticket,
+                levelId,
+                InventoryManager.Instance.GetTickets()
+            );
+            Debug.Log(
+                $"Tracking Sink Ticket: To: {to}, Ticket: {ticket}, Level ID: {levelId}, Balance: {InventoryManager.Instance.GetTickets()}"
+            );
+        }
+    }
+    #endregion
 }

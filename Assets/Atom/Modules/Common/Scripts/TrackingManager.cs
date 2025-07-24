@@ -109,5 +109,65 @@ namespace Atom
                 {"official", official}
             });
         }
+
+        public void TrackTutorial(int step)
+        {
+            AthenaApp.Instance.AnalyticsManager.TrackEventWithParameters(Global.TrackingEventName.TUTORIAL, new Dictionary<string, object>()
+            {
+                {"step", step}
+            });
+        }
+
+        public void TrackGameStart(string gameMode, string id, string levelId, int attempts)
+        {
+            AthenaApp.Instance.AnalyticsManager.TrackEventWithParameters(Global.TrackingEventName.GAME_START, new Dictionary<string, object>()
+            {
+                {"game_mode", gameMode},
+                {"ID", id},
+                {"level_id", levelId},
+                {"attempts", attempts}
+            });
+        }
+
+        public void TrackGameOver(string gameMode, string id, string levelId, int timeSpent, object result, int levelAbandoned, int attempts, string loseCause)
+        {
+            AthenaApp.Instance.AnalyticsManager.TrackEventWithParameters(Global.TrackingEventName.GAME_OVER, new Dictionary<string, object>()
+            {
+                {"game_mode", gameMode},
+                {"ID", id},
+                {"level_id", levelId},
+                {"time_spent", timeSpent},
+                {"context", result},
+                {"level_abandoned", levelAbandoned},
+                {"attempts", attempts},
+                {"lose_cause", loseCause},
+            });
+        }
+
+        public void TrackSourceResourceEvent(string from, string currency, int value, object levelId, int balance)
+        {
+            AthenaApp.Instance.AnalyticsManager.TrackEventWithParameters(Global.TrackingEventName.BI_RESOURCE_EVENT, new Dictionary<string, object>()
+            {
+                {"flow_type", "source"},
+                {"from", from},
+                {"virtual_currency_name", currency},
+                {"value", value},
+                {"level_id", levelId},
+                {"balance", balance}
+            });
+        }
+
+        public void TrackSinkResourceEvent(string to, string currency, int value, object levelId, int balance)
+        {
+            AthenaApp.Instance.AnalyticsManager.TrackEventWithParameters(Global.TrackingEventName.BI_RESOURCE_EVENT, new Dictionary<string, object>()
+            {
+                {"flow_type", "sink"},
+                {"to", to},
+                {"virtual_currency_name", currency},
+                {"value", value},
+                {"level_id", levelId},
+                {"balance", balance}
+            });
+        }
     }
 }

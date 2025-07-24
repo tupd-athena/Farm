@@ -279,7 +279,7 @@ namespace Factory
         public void CheckWinLose()
         {
             UpdateFishCountText();
-            if (GameManager.Instance.totalHP <= 0)
+            if (GameManager.Instance.totalHP <= 1)
             {
                 Debug.Log("Lose");
                 GameManager.Instance.ShowLosePanel();

@@ -614,7 +614,7 @@ namespace Factory
                 eventData.pressEventCamera,
                 out position
             );
-            _tempGear.transform.localPosition = position + new Vector2(0, 100);
+            _tempGear.transform.localPosition = position + new Vector2(0, 0);
         }
 
         public void OnEndDrag(PointerEventData eventData)

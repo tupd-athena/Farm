@@ -47,13 +47,16 @@ public class SquidController : FishController
             // InventoryManager.Instance.AddTickets(1);
             GamePlayTracking.Instance.AddByKey(GamePlayTracking.CURRENT_BOSSES, 1);
             var ticket = Instantiate(Resources.Load<GameObject>("Prefabs/Ticket"));
+            string from = "squid";
+            int amount = 1;
             ticket.transform.position = transform.position;
             ticket.SetActive(true);
-            ticket.GetComponent<CoinController>().value = 1;
+            ticket.GetComponent<CoinController>().value = amount;
             ticket.GetComponent<CoinController>().Active();
             ticket.GetComponent<CoinController>().OnComplete = () =>
             {
-                InventoryManager.Instance.AddTickets(1);
+                GamePlayTracking.Instance.TrackingSourceTicket(from, amount);
+                InventoryManager.Instance.AddTickets(amount);
                 AudioManager.Instance.PlaySound("Coin");
                 Destroy(ticket); // Clean up the ticket object after use
             };

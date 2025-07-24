@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "918409591051",
+    "project_id": "project-delta-73fd0",
+    "storage_bucket": "project-delta-73fd0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:918409591051:android:8bb9ee1d6782844ab18a0e",
+        "android_client_info": {
+          "package_name": "com.athena.delta.testing"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3pDTC4up_MVJPw-hISH1GDpGvbaMZ0LY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -313,7 +313,7 @@ namespace Factory
 
         public void UpdateWaveText()
         {
-            _waveText.text = $"Wave {GameManager.Instance.currentDay + 1}";
+            _waveText.text = $"Day {GameManager.Instance.currentDay + 1}";
         }
 
         public void UpdateLevelProgressSlider()
