@@ -74,6 +74,7 @@ namespace Factory
         public GameObject DuneObject => _duneObject;
 
         public System.Action OnGameStart;
+        public System.Action ChangeTab;
 
         public bool isStop = false;
 
@@ -161,6 +162,7 @@ namespace Factory
 
         public async Task NewGame()
         {
+            homeUI.NavigationBar.currentTab = "None";
             GamePlayTracking.Instance?.IncreaseAttempts();
             homeUI.TicketPanel.SetActive(false);
             homeUI.WavePanel.SetActive(true);
@@ -314,15 +316,15 @@ namespace Factory
             {
                 RandomArtifactPopup();
             }
-            Debug.Log($"NextDay {currentDay}");
+            // Debug.Log($"NextDay {currentDay}");
             isStop = true;
             sumOfFishesHealth =
                 _currentLevelConfig.maxTotalFishHP * (1 + (long)(0.3f * Mathf.Pow(2, currentDay)));
             totalHP += dayConfiguration.maxInPool;
-            Debug.Log($"Max Total Fish HP: {_currentLevelConfig.maxTotalFishHP}");
+            // Debug.Log($"Max Total Fish HP: {_currentLevelConfig.maxTotalFishHP}");
             // await homeUI.ShowGameStartPanel();
             InitFishes(dayConfiguration.fishConfigs);
-            Debug.Log($"UpdateGold + {_currentLevelConfig.initialLevelCurrency}");
+            // Debug.Log($"UpdateGold + {_currentLevelConfig.initialLevelCurrency}");
             homeUI.UpdateDay();
             // SacrificeRandomGears();
             GamePlayTracking.Instance.SetByKey(GamePlayTracking.CURRENT_DAY, currentDay);
@@ -798,19 +800,38 @@ namespace Factory
                     currentWeight += gearData.weight;
                     if (randomValue <= currentWeight)
                     {
-                        shopItem.gear.SetGearData(gearData);
-                        shopItem.gear.SetItemData(gearData);
+                        var data = new GearData();
+
+                        if (index == 0)
+                        {
+                            var food1 = _gearDataSO.gearDataList[1];
+                            if (food1 == null)
+                            {
+                                data.Copy(gearData);
+                            }
+                            else
+                            {
+                                Debug.LogWarning("Food1 is not null");
+                                data.Copy(food1);
+                            }
+                        }
+                        else
+                        {
+                            data.Copy(gearData);
+                        }
+                        shopItem.gear.SetGearData(data);
+                        shopItem.gear.SetItemData(data);
                         shopItem.gear.isInShop = true;
-                        homeUI.UpdateCostText(shopItem, (int)gearData.cost);
+                        homeUI.UpdateCostText(shopItem, (int)data.cost);
                         shopItem.gear.Show();
                         shopItem.gear.FillItemIcon(1);
-                        shopItem.gear.SetGear(gearData.gearTypes);
+                        shopItem.gear.SetGear(data.gearTypes);
                         shopItem.gear.OnDropShop = null;
-                        shopItem.gear.OnDropShop += (gearData) =>
+                        shopItem.gear.OnDropShop += (data) =>
                         {
-                            if (_gold >= (int)gearData.cost)
+                            if (_gold >= (int)data.cost)
                             {
-                                _gold -= (int)gearData.cost;
+                                _gold -= (int)data.cost;
                                 UpdateGold(_gold);
                                 shopItem.purchased = true;
                             }
@@ -1157,6 +1178,11 @@ namespace Factory
         public GearRarityData GetGearRarityData(GearRarity rarityType)
         {
             return _gearDataSO.gearRarityDataList.Find(r => r.rarity == rarityType);
+        }
+
+        public GearController GetHeadGear()
+        {
+            return _gearControllers.Find(g => g.isHead);
         }
 
         public void SacrificeRandomGears()

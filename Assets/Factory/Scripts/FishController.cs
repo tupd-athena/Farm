@@ -539,7 +539,7 @@ namespace Factory
                 System.Random random = new System.Random();
                 float randomX = random.Next(-30, 30) * 0.1f;
                 int moveArea = (int)(fishConfig.moveArea * 10);
-                Debug.Log("MoveArea: " + moveArea);
+                // Debug.Log("MoveArea: " + moveArea);
                 moveArea = Mathf.Abs(moveArea);
                 float randomY = Mathf.Clamp(
                     fishConfig.depth + random.Next(-moveArea, moveArea) * 0.1f,

@@ -60,8 +60,7 @@ namespace Factory
         public string description = "";
         public int level = 1;
         public float baseValue;
-        public float weight;
-        public float size = 56;
+        public float weight;        public float size = 56;
         public bool hideInInventory = false;
         public GearRarity rarity = GearRarity.Common;
         public GearBaseColorType gearBaseColorType = GearBaseColorType.TEXT1;

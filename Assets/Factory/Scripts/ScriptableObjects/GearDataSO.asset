@@ -33,11 +33,13 @@ MonoBehaviour:
     gearTypes: 0000000004000000
     customValues:
     - id: level
-      customValue: 1
+      customValue: 6
     - id: mult
       customValue: 0.5
     - id: breakChance
       customValue: 0.5
+    - id: sunken
+      customValue: 5
   - id: 1
     itemName: Normal Food
     iconName: F1
@@ -61,6 +63,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 5
   - id: 2
     itemName: Light Food
     iconName: F2
@@ -84,6 +88,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 5
   - id: 3
     itemName: Weighted Food
     iconName: F3
@@ -107,6 +113,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 5
   - id: 4
     itemName: Speed Up
     iconName: SpecialGears/Speed
@@ -134,6 +142,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 20
   - id: 5
     itemName: Multiplier
     iconName: multiplier
@@ -159,6 +169,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 20
   - id: 6
     itemName: Invicible Star
     iconName: SpecialGears/Star
@@ -184,6 +196,8 @@ MonoBehaviour:
       customValue: 1
     - id: Duration
       customValue: 0.5
+    - id: sunken
+      customValue: 20
   - id: 7
     itemName: Homing Food
     iconName: SpecialGears/F5
@@ -207,6 +221,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 20
   - id: 8
     itemName: Exploding Food.
     iconName: SpecialGears/B1
@@ -238,6 +254,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 20
   - id: 9
     itemName: Splitting Food
     iconName: F4
@@ -263,6 +281,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 20
   - id: 10
     itemName: TheTripple
     iconName: duck
@@ -288,6 +308,8 @@ MonoBehaviour:
       customValue: 0.5
     - id: level
       customValue: 1
+    - id: sunken
+      customValue: 20
   gearBaseColors:
   - type: 0
     sprite: {fileID: 21300000, guid: 73dff39fe971849459362833a51721d4, type: 3}

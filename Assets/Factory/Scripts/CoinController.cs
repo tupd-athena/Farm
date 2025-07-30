@@ -27,7 +27,7 @@ namespace Factory
         {
             isCollected = false;
             transform.DOComplete();
-            transform.DOLocalMoveY(GameManager.Instance.GetBottomYWithOffset(), 1f).SetEase(Ease.InSine);
+            transform.DOLocalMoveY(GameManager.Instance.GetBottomYWithOffset(0.4f), 1f).SetEase(Ease.InSine);
             transform.DOLocalMoveX(transform.localPosition.x + Random.Range(-0.3f, 0.3f), 2f);
             if (isCollected || gameObject.activeSelf == false)
                 return;

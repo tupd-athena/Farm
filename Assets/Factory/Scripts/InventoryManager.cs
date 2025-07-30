@@ -51,6 +51,7 @@ public class InventoryManager : MonoBehaviour
     public GameObject _inventoryBottomPopup;
     public GameObject _mask;
     public Slider slider;
+    public RectTransform buttonReroll1Ticket;
 
     public List<InventoryItemController> inventoryItemControllers =
         new List<InventoryItemController>();
@@ -69,6 +70,12 @@ public class InventoryManager : MonoBehaviour
     public ParticleSystem giftEffect;
     public System.Action<InventoryItemController> OnItemClicked;
     public System.Action<InventoryItemCard> OnCardClicked;
+    public System.Action OnButtonReroll1Ticket;
+    public System.Action OnButtonReroll10Ticket;
+    public System.Action OnButtonReroll1Diamond;
+    public System.Action OnButtonReroll10Diamond;
+    public Button LevelUpButton => _levelUpButton;
+    public System.Action OnLevelUpButtonClicked;
 
     // Properties for tickets and diamonds using JSON save system
     public int Tickets
@@ -189,12 +196,15 @@ public class InventoryManager : MonoBehaviour
                 card.GetComponent<CanvasGroup>().blocksRaycasts = false;
                 card.GetComponent<CanvasGroup>().interactable = false;
                 card.transform.DOScale(Vector3.zero, 0f).SetEase(Ease.InCirc).SetDelay(1f);
-                
+
                 // Check if there are any more clickable cards after a delay
-                DOVirtual.DelayedCall(1.5f, () =>
-                {
-                    CheckAndShowTreasuresIfNoClickableCards();
-                });
+                DOVirtual.DelayedCall(
+                    0.2f,
+                    () =>
+                    {
+                        CheckAndShowTreasuresIfNoClickableCards();
+                    }
+                );
             }
         };
     }
@@ -250,6 +260,7 @@ public class InventoryManager : MonoBehaviour
                 levelUpEffect.Play();
             }
         }
+        OnLevelUpButtonClicked?.Invoke();
     }
 
     public void ShowInventory()
@@ -393,7 +404,7 @@ public class InventoryManager : MonoBehaviour
                 string jsonData = File.ReadAllText(saveFilePath);
                 inventoryData = JsonUtility.FromJson<ListInventoryItemData>(jsonData);
                 Debug.Log("Inventory loaded successfully from JSON");
-                if (inventoryData != null)
+                if (inventoryData != null && inventoryData.items.Count > 0)
                 {
                     return true;
                 }
@@ -425,7 +436,7 @@ public class InventoryManager : MonoBehaviour
                 string jsonData = File.ReadAllText(saveFilePath);
                 inventoryData = JsonUtility.FromJson<ListInventoryItemData>(jsonData);
                 Debug.Log("Inventory loaded successfully from JSON");
-                if (inventoryData != null)
+                if (inventoryData != null && inventoryData.items.Count > 0)
                 {
                     InitInventoryItemControllers();
                 }
@@ -491,6 +502,12 @@ public class InventoryManager : MonoBehaviour
                 gearData = new GearData(),
             };
             newItem.gearData.Copy(gearData);
+            var levelPara = newItem.gearData.customValues.FirstOrDefault(x => x.id == "level");
+            if (levelPara != null)
+            {
+                newItem.gearData.customValues.FirstOrDefault(x => x.id == "level").customValue =
+                    1.0f;
+            }
             inventoryData.items.Add(newItem);
         }
         InitInventoryItemControllers();
@@ -521,6 +538,7 @@ public class InventoryManager : MonoBehaviour
             string jsonData = JsonUtility.ToJson(inventoryData, true);
             File.WriteAllText(saveFilePath, jsonData);
             Debug.Log("Inventory saved successfully");
+            Debug.Log("Path: " + saveFilePath);
         }
         catch (Exception e)
         {
@@ -596,10 +614,12 @@ public class InventoryManager : MonoBehaviour
             if (amount == 1)
             {
                 Roll1Card();
+                OnButtonReroll1Ticket?.Invoke(); // Notify listeners of ticket reroll
             }
             else if (amount == 10)
             {
                 Roll10Cards();
+                OnButtonReroll10Ticket?.Invoke(); // Notify listeners of ticket reroll
             }
         }
     }
@@ -607,11 +627,13 @@ public class InventoryManager : MonoBehaviour
     public void RollDiamondCards(int amount)
     {
         int diamondCost = amount * 10; // Each roll costs 10 diamonds
-        
+
         // Check if we have enough diamonds
         if (Diamonds < diamondCost)
         {
-            Debug.LogWarning($"Not enough diamonds to roll {amount} cards. Need: {diamondCost}, Available: {Diamonds}");
+            Debug.LogWarning(
+                $"Not enough diamonds to roll {amount} cards. Need: {diamondCost}, Available: {Diamonds}"
+            );
             return;
         }
 
@@ -620,54 +642,117 @@ public class InventoryManager : MonoBehaviour
         {
             if (amount == 1)
             {
-                Roll1Card();
+                Roll1Card("sunken");
+                OnButtonReroll1Diamond?.Invoke(); // Notify listeners of diamond reroll
             }
             else if (amount == 10)
             {
-                Roll10Cards();
+                Roll10Cards("sunken");
+                OnButtonReroll10Diamond?.Invoke(); // Notify listeners of diamond reroll
             }
         }
     }
 
-    public async Task Roll1Card()
+    // Helper method to select item based on weight
+    private InventoryItemData GetWeightedRandomItem(System.Random random, string customName)
+    {
+        if (inventoryData == null || inventoryData.items.Count == 0)
+        {
+            Debug.LogError("No items available for weighted selection");
+            return null;
+        }
+        if(customName != "")
+        {
+            return GetWeightedRandomItembyCustomWeight(random, customName);
+        }
+        // Calculate total weight
+        float totalWeight = 0f;
+        foreach (var item in inventoryData.items)
+        {
+            totalWeight += item.gearData.weight;
+        }
+
+        if (totalWeight <= 0f)
+        {
+            Debug.LogWarning("Total weight is 0 or negative, using uniform random selection");
+            int randomIndex = random.Next(inventoryData.items.Count);
+            return inventoryData.items[randomIndex];
+        }
+
+        // Generate random value between 0 and totalWeight
+        float randomValue = (float)(random.NextDouble() * totalWeight);
+
+        // Find the item that corresponds to this random value
+        float currentWeight = 0f;
+        foreach (var item in inventoryData.items)
+        {
+            currentWeight += item.gearData.weight;
+            if (randomValue <= currentWeight)
+            {
+                return item;
+            }
+        }
+
+        // Fallback (should never reach here)
+        return inventoryData.items[inventoryData.items.Count - 1];
+    }
+
+    private InventoryItemData GetWeightedRandomItembyCustomWeight(
+        System.Random random,
+        string customName
+    )
+    {
+        if (inventoryData == null || inventoryData.items.Count == 0)
+        {
+            Debug.LogError("No items available for weighted selection");
+            return null;
+        }
+
+        // Calculate total weight
+        float totalWeight = 0f;
+        foreach (var item in inventoryData.items)
+        {
+            totalWeight += item.gearData.GetCustomValue(customName);
+        }
+
+        if (totalWeight <= 0f)
+        {
+            Debug.LogWarning("Total weight is 0 or negative, using uniform random selection");
+            int randomIndex = random.Next(inventoryData.items.Count);
+            return inventoryData.items[randomIndex];
+        }
+
+        // Generate random value between 0 and totalWeight
+        float randomValue = (float)(random.NextDouble() * totalWeight);
+
+        // Find the item that corresponds to this random value
+        float currentWeight = 0f;
+        foreach (var item in inventoryData.items)
+        {
+            currentWeight += item.gearData.GetCustomValue(customName);
+            if (randomValue <= currentWeight)
+            {
+                return item;
+            }
+        }
+
+        // Fallback (should never reach here)
+        return inventoryData.items[inventoryData.items.Count - 1];
+    }
+
+    public async Task Roll1Card(string customName = "")
     {
         // Hide treasure popups when rolling
         HidePopups();
 
         System.Random random = new System.Random();
+        InventoryItemData itemData = GetWeightedRandomItem(random, customName);
 
-        // 50% chance for gold, 50% chance for card - COMMENTED OUT GOLD LOGIC
-        // bool isGold = random.Next(0, 2) == 0;
-
-        // if (isGold)
-        // {
-        //     // Give random gold between 1-10
-        //     int goldAmount = random.Next(1, 11);
-        //     GameManager.Instance.AddGold(goldAmount);
-        //     Debug.Log($"Rolled gold: {goldAmount}");
-
-        //     // Create and show coin card
-        //     var coin = Instantiate(coinPrefab, cardContainer);
-        //     coin.transform.SetParent(cardContainer);
-        //     coin.transform.localScale = Vector3.one;
-        //     coin.GetComponent<RectTransform>().anchoredPosition = new Vector2(
-        //         -1000,
-        //         random.Next(-200, 200)
-        //     );
-        //     coin.GetComponent<RectTransform>()
-        //         .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
-        //         .SetEase(Ease.OutQuint);
-        //     coin.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
-        //         .SetEase(Ease.OutBack);
-        //     coin.isCoin = true;
-        //     coin.canClick = true;
-        //     inventoryItemCards.Add(coin);
-        // }
-        // else
-        // {
-        // Always give card instead of random gold/card
-        int randomIndex = random.Next(inventoryData.items.Count);
-        InventoryItemData itemData = inventoryData.items[randomIndex];
+        if (itemData == null)
+        {
+            Debug.LogError("Failed to get weighted random item, aborting roll");
+            return;
+        }
 
         InventoryItemCard card = Instantiate(cardPrefab, cardContainer)
             .GetComponent<InventoryItemCard>();
@@ -684,13 +769,13 @@ public class InventoryManager : MonoBehaviour
             .SetEase(Ease.OutBack);
         inventoryItemCards.Add(card);
 
-        Debug.Log($"Rolled card: {itemData.name}");
+        Debug.Log($"Rolled card: {itemData.name} (weight: {itemData.gearData.weight})");
         // }
 
         await Task.Delay(100); // Small delay for animation
     }
 
-    public async Task Roll10Cards()
+    public async Task Roll10Cards(string customName = "")
     {
         // Hide treasure popups when rolling
         HidePopups();
@@ -699,38 +784,13 @@ public class InventoryManager : MonoBehaviour
 
         for (int i = 0; i < 10; i++)
         {
-            // 50% chance for gold, 50% chance for card for each roll - COMMENTED OUT GOLD LOGIC
-            // bool isGold = random.Next(0, 2) == 0;
+            InventoryItemData itemData = GetWeightedRandomItem(random, customName);
 
-            // if (isGold)
-            // {
-            //     // Give random gold between 1-10
-            //     int goldAmount = random.Next(1, 11);
-            //     GameManager.Instance.AddGold(goldAmount);
-            //     Debug.Log($"Roll {i + 1}: Rolled gold: {goldAmount}");
-
-            //     // Create and show coin card
-            //     var coin = Instantiate(coinPrefab, cardContainer);
-            //     coin.transform.SetParent(cardContainer);
-            //     coin.transform.localScale = Vector3.one;
-            //     coin.GetComponent<RectTransform>().anchoredPosition = new Vector2(
-            //         -1000,
-            //         random.Next(-200, 200)
-            //     );
-            //     coin.GetComponent<RectTransform>()
-            //         .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
-            //         .SetEase(Ease.OutQuint);
-            //     coin.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
-            //         .SetEase(Ease.OutBack);
-            //     coin.isCoin = true;
-            //     coin.canClick = true;
-            //     inventoryItemCards.Add(coin);
-            // }
-            // else
-            // {
-            // Always give card instead of random gold/card
-            int randomIndex = random.Next(inventoryData.items.Count);
-            InventoryItemData itemData = inventoryData.items[randomIndex];
+            if (itemData == null)
+            {
+                Debug.LogError($"Failed to get weighted random item for roll {i + 1}, skipping");
+                continue;
+            }
 
             InventoryItemCard card = Instantiate(cardPrefab, cardContainer)
                 .GetComponent<InventoryItemCard>();
@@ -747,116 +807,14 @@ public class InventoryManager : MonoBehaviour
                 .SetEase(Ease.OutBack);
             inventoryItemCards.Add(card);
 
-            Debug.Log($"Roll {i + 1}: Rolled card: {itemData.name}");
+            Debug.Log(
+                $"Roll {i + 1}: Rolled card: {itemData.name} (weight: {itemData.gearData.weight})"
+            );
             // }
 
             // Add delay between each card reveal
             await Task.Delay(150);
         }
-    }
-
-    public async Task ShowRewardCards()
-    {
-        // Hide treasure popups when showing reward cards
-        HidePopups();
-        
-        System.Random random = new System.Random();
-        List<InventoryItemData> rewardItems = new List<InventoryItemData>();
-        int cardAmount = random.Next(0, Diamonds); // Use new Diamonds property
-        Debug.Log($"Showing {cardAmount} reward cards of {Diamonds} total diamonds");
-        if (inventoryData != null)
-        {
-            // Check if there are any items with level > 1 and current stack > 0
-            bool hasLeveledItems = false;
-            foreach (var item in inventoryData.items)
-            {
-                if (item.GetLevel() > 1 || item.currentStackSize > 0)
-                {
-                    hasLeveledItems = true;
-                    break;
-                }
-            }
-
-            if (!hasLeveledItems)
-            {
-                // Spawn cards with IDs from 0 to 3
-                for (int id = 0; id <= 3; id++)
-                {
-                    var item = inventoryData.items.FirstOrDefault(i => i.id == id);
-                    if (item != null)
-                    {
-                        rewardItems.Add(item);
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < cardAmount; i++)
-                {
-                    int randomIndex = random.Next(inventoryData.items.Count);
-                    InventoryItemData itemData = inventoryData.items[randomIndex];
-                    if (!rewardItems.Exists(item => item.id == itemData.id))
-                    {
-                        rewardItems.Add(itemData);
-                    }
-                }
-            }
-        }
-        if (rewardItems.Count > 0)
-        {
-            rewardItems.Sort((a, b) => b.gearData.rarity.CompareTo(a.gearData.rarity));
-            for (int i = 0; i < rewardItems.Count; i++)
-            {
-                await Task.Delay(50); // Delay to simulate card reveal
-                InventoryItemData itemData = rewardItems[i];
-                InventoryItemCard card = Instantiate(cardPrefab, cardContainer)
-                    .GetComponent<InventoryItemCard>();
-                card.itemData.CopyFrom(itemData);
-                card.ShowCard(itemData);
-                card.GetComponent<RectTransform>().anchoredPosition = new Vector2(
-                    -1000,
-                    random.Next(-200, 200)
-                );
-                card.GetComponent<RectTransform>()
-                    .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
-                    .SetEase(Ease.OutQuint);
-                card.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
-                    .SetEase(Ease.OutBack);
-                inventoryItemCards.Add(card);
-                SpendDiamonds(1); // Use new diamond system
-            }
-        }
-        // COMMENTED OUT GOLD/COIN LOGIC - Only item rewards now
-        // int remainingDiamonds = Diamonds;
-        // Debug.Log($"Random coins to spawn: {remainingDiamonds} while {Diamonds} diamonds exist");
-        // if (remainingDiamonds <= 0 && inventoryItemCards.Count == 0)
-        // {
-        //     ShowTopPopup();
-        //     return; // No coins if no items to show
-        // }
-        // for (int i = 0; i < remainingDiamonds; i++)
-        // {
-        //     var coin = Instantiate(coinPrefab, cardContainer);
-        //     coin.transform.SetParent(cardContainer);
-        //     coin.transform.localScale = Vector3.one;
-        //     coin.GetComponent<RectTransform>().anchoredPosition = new Vector2(
-        //         -1000,
-        //         random.Next(-200, 200)
-        //     );
-        //     coin.GetComponent<RectTransform>()
-        //         .DOAnchorPos(new Vector2(random.Next(-200, 100), random.Next(-200, 200)), 0.7f)
-        //         .SetEase(Ease.OutQuint);
-        //     coin.transform.DOLocalRotate(new Vector3(0, 0, random.Next(-50, 50)), 0.4f)
-        //         .SetEase(Ease.OutBack);
-        //     coin.isCoin = true;
-        //     coin.canClick = true;
-        //     inventoryItemCards.Add(coin);
-        // }
-        // // Spend all remaining diamonds at once
-        // if (remainingDiamonds > 0)
-        // {
-        //     SpendDiamonds(remainingDiamonds);
-        // }
     }
 
     // Methods to manage tickets
@@ -885,7 +843,7 @@ public class InventoryManager : MonoBehaviour
             Tickets = Tickets - amount;
             Debug.Log($"Spent {amount} tickets. Remaining: {Tickets}");
             UpdateTicketText(); // Update UI when tickets change
-            GamePlayTracking.Instance.TrackingSinkTicket("treasure",amount);
+            GamePlayTracking.Instance.TrackingSinkTicket("treasure", amount);
             return true;
         }
         else
@@ -921,7 +879,7 @@ public class InventoryManager : MonoBehaviour
             Diamonds = Diamonds - amount;
             Debug.Log($"Spent {amount} diamonds. Remaining: {Diamonds}");
             UpdateDiamondText(); // Update UI when diamonds change
-            GamePlayTracking.Instance.TrackingSinkDiamond("treasure",amount);
+            GamePlayTracking.Instance.TrackingSinkDiamond("treasure", amount);
             return true;
         }
         else

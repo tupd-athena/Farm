@@ -466,9 +466,11 @@ namespace Factory
             GameManager.Instance.RandomGearsInShop();
         }
 
+        public System.Action StartButtonClickActionForTutorial = null;
         public void OnStartButtonClick()
         {
             GameManager.Instance.StartGame();
+            StartButtonClickActionForTutorial?.Invoke();
         }
         #endregion
 

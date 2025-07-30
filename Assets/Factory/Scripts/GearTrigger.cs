@@ -92,6 +92,7 @@ public class GearTrigger : MonoBehaviour, IDropHandler
         gearController.LevelText.text = gearController.gearData.level.ToString();
         otherGear.Hide();
         gearController.UpdateGearIconLevel();
+        gearController.GetComponent<GearEffectComponent>().StopEffect("Drop");
     }
 
     protected void SwapGears(GearController otherGear)
@@ -106,6 +107,9 @@ public class GearTrigger : MonoBehaviour, IDropHandler
         otherGear.SetGearData(tempGearData);
         otherGear.SetItemData(tempGearData);
         otherGear.Show();
+            
+        gearController.GetComponent<GearEffectComponent>().PlayEffect("Drop");
+        otherGear.GetComponent<GearEffectComponent>().PlayEffect("Drop");
     }
 
     protected void TransferGear(GearController otherGear)
@@ -116,5 +120,6 @@ public class GearTrigger : MonoBehaviour, IDropHandler
         gearController.Show();
         otherGear.Hide();
         gearController.GetComponent<CanvasGroup>().alpha = 1f;
+        gearController.GetComponent<GearEffectComponent>().PlayEffect("Drop");
     }
 }

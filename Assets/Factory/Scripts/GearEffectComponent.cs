@@ -6,6 +6,8 @@ public class GearEffectComponent : MonoBehaviour
 {
     [SerializeField]
     ParticleSystem electricEffect;
+    [SerializeField]
+    ParticleSystem dropEffect;
 
     [SerializeField]
     Transform vfxParent;
@@ -35,6 +37,10 @@ public class GearEffectComponent : MonoBehaviour
             case "Electric":
                 electricEffect.gameObject.SetActive(true);
                 electricEffect.Play();
+                break;
+            case "Drop":
+                dropEffect.gameObject.SetActive(true);
+                dropEffect.Play();
                 break;
             default:
                 Debug.LogWarning($"Effect '{effectName}' not recognized.");

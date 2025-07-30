@@ -231,7 +231,7 @@ namespace Factory
         {
             if (_velocityText != null)
             {
-                Debug.Log("UpdateVelocity: " + value);
+                // Debug.Log("UpdateVelocity: " + value);
                 _velocityText.text = value.ToString("F2") + "/s";
             }
             if (value == 0)

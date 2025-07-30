@@ -11,6 +11,7 @@ public class StartPopupController : MonoBehaviour
     public TMP_Text goldText;
     public TMP_Text bossText;
     public TMP_Text progressText;
+    public RectTransform playButtonRect;
 
     public System.Action OnPlayButtonClick;
 

@@ -11,6 +11,10 @@ public class NavigationBar : MonoBehaviour
     public bool isWaitingForTabChange = false;
     public string currentTab = "Inventory";
 
+    public System.Action OnInventoryButtonClick;
+    public System.Action OnPlayButtonClick;
+    public System.Action OnTreasuresButtonClick;
+
     public void Start()
     {
         GameManager.Instance.homeUI.StartPopupController.OnPlayButtonClick = null; // Reset previous callback to avoid multiple invocations
@@ -71,17 +75,20 @@ public class NavigationBar : MonoBehaviour
                 InventoryManager.Instance.HideSpecialTreasures();
                 InventoryManager.Instance.HideTreasures();
                 GameManager.Instance.homeUI.ShowInventory();
+                OnInventoryButtonClick?.Invoke();
                 break;
             case "Play":
                 InventoryManager.Instance.HideSpecialTreasures();
                 InventoryManager.Instance.HideTreasures();
                 GameManager.Instance.homeUI.HideInventory();
                 GameManager.Instance.homeUI.StartPopupController.ShowPopup();
+                OnPlayButtonClick?.Invoke();
                 break;
             case "Treasures":
                 GameManager.Instance.homeUI.StartPopupController.HidePopup();
                 GameManager.Instance.homeUI.HideInventory();
                 InventoryManager.Instance.ShowTreasures();
+                OnTreasuresButtonClick?.Invoke();
                 break;
             default:
                 Debug.Log($"{tabName} button clicked.");
@@ -90,6 +97,8 @@ public class NavigationBar : MonoBehaviour
         currentTab = tabName;
         await Task.Delay(100); // Simulate some delay for UI transition
         isWaitingForTabChange = false;
+        GameManager.Instance.ChangeTab?.Invoke();
+
     }
 
     public void ResetAlllbuttons()
@@ -113,6 +122,6 @@ public class NavigationBar : MonoBehaviour
     {
         GetComponent<RectTransform>().DOAnchorPosY(100, 0.5f);
         await Task.Delay(500); // Wait for the bar to show
-        ChangeTab("Inventory"); // Reapply the current tab
+        ChangeTab("Play"); // Reapply the current tab
     }
 }
